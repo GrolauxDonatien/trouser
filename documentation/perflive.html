@@ -1,0 +1,26 @@
+<html>
+    <body>
+        <ul id="ul"></ul>
+    <script src="../examples/live.js"></script>
+    <script>
+        let v1=new Date().getTime();
+        let ul=live(document.getElementById("ul"));
+        let l=live([]).ilve;
+        ul.mapChildren(l, (item)=>`<li>${item}</li>`);
+        for(let i=0; i<100000; i++) {
+            l.live.push(i);
+        }
+        let v2=new Date().getTime();
+        console.log(v2-v1);
+                /*
+679
+Navigated to file:///Y:/Work/ICHEC/JavaScriptLive/documentation/perflive.html
+perflive.html:14 681
+Navigated to file:///Y:/Work/ICHEC/JavaScriptLive/documentation/perflive.html
+perflive.html:14 742
+Navigated to file:///Y:/Work/ICHEC/JavaScriptLive/documentation/perflive.html
+perflive.html:14 682
+        */
+    </script>
+    </body>
+</html>

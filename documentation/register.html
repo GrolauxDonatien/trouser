@@ -1,0 +1,64 @@
+<html>
+
+<head>
+    <link href="../examples/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 10px 10px 10px 10px;
+        }
+        .mb-3 {
+            line-height: 16px;
+            margin-bottom: 0.2rem!important;
+        }
+        .invalid-feedback {
+            display:block;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <form>
+            <div class="mb-3">
+                <label class="form-label" for="login">Login</label>
+                <input class="form-control" name="login" id="login">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="password">Password</label>
+                <input class="form-control" type="password" name="password" id="password"><br>
+            </div>
+            <div class="invalid-feedback" id="error" style="display: block"></div>
+            <input class="btn btn-primary" type="submit" id="submit">
+        </form>
+    </main>
+</body>
+<script src="bootstrap.bundle.min.js"></script>
+<script src="../examples/live.js"></script>
+<script>
+    let login = live(document.getElementById("login"));
+    let password = live(document.getElementById("password"));
+    let mustCheck = live(false);
+
+    let validate = live(() => {
+        if (mustCheck.live) {
+            if (login.value.live.length < 8) return "Login too short (min 8)";
+            if (password.value.live.length < 8) return "Password too short (min 8)";
+            return true;
+        }
+    })
+
+    live(document.getElementById("error")).innerText = live(() =>
+        typeof validate.live() == "string" ? validate.live() : "");
+
+    document.getElementById("submit").addEventListener("click", (event) => {
+        mustCheck.live = true;
+        if (validate.live() === true) {
+            // go on, submit to server
+        } else {
+            event.preventDefault();
+        }
+    });
+</script>
+
+</html>

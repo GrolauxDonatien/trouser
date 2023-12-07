@@ -1,0 +1,42 @@
+<html>
+
+<body>
+    <script src="live.js"></script>
+    <script src="jsonreactivedom.js"></script>
+    <script>
+        const _CONTACTS_ = Symbol('contacts'); // creating a widget type requires defining its name as a Symbol
+        build.builders._CONTACTS_ = (model) => { // register the new widget type
+            let rows = live([]);
+            live(() => {
+                rows.live = model.data.live.map((contact) => {
+                    return {
+                        _TR_,
+                        children: [{ _TD_, innerText: contact.name },
+                        { _TD_, innerText: contact.surname },
+                        { _TD_, innerText: contact.email }]
+                    }
+                });
+            })
+            return build.build( // building the output model from a widget definition is slightly different
+                {
+                    child: {
+                        _TBODY_,
+                        children: rows
+                    }
+                }, _TABLE_);
+        }
+
+        let data = live([{ name: "Albert", surname: "Einstein", email: "albert.einstein@science.org" }, { name: "Charles", surname: "Darwin", email: "charles.darwin@science.org" }]);
+
+        const ui = {
+            _CONTACTS_, data
+        }
+
+        document.body.appendChild(build(ui));
+
+        data.live.push({ name: "Elton", surname: "John", email: "elton.john@music.org" });
+
+    </script>
+</body>
+
+</html>

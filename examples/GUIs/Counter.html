@@ -1,0 +1,13 @@
+<html>
+
+<body>
+    <span id="counter"></span> <button onclick="counter.live++">Count</button>
+    <script src="../live.js"></script>
+    <script src="../iframe.js"></script>
+    <script>
+        counter=live(0);
+        live(document.getElementById("counter")).innerHTML=counter;
+    </script>
+</body>
+
+</html>

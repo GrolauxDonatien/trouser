@@ -1,0 +1,39 @@
+<html>
+
+<body>
+    <button onclick="show.live = !show.live">Toggle List</button>
+    <button onclick="list.live.push(list.live.length + 1)">Push Number</button>
+    <button onclick="list.live.pop()">Pop Number</button>
+    <button onclick="list.live.reverse()">Reverse List</button>
+    <ul id="list">
+    </ul>
+    <p id="hidden">List is not empty, but hidden.</p>
+    <p id="empty">List is empty.</p>
+    <p id="count"></p>
+    <script src="../live.js"></script>
+    <script src="../iframe.js"></script>
+    <script>
+        // This example maps a live array to a live list of DOM elements
+        list = live([1, 2, 3]);
+        show = live(true);
+
+        // to map the list to DOM elements, we use the live parent DOM element
+        let listEl = live(document.getElementById("list"));
+        // mapChildren maps a live list to the children of a live DOM element
+        listEl.mapChildren(
+            list,                       // live list
+            (item)=>`<li>${item}</li>`  // template
+        )
+
+        // some live mapping of CSS attributes
+        live(document.getElementById("hidden")).style.display = live(() => (show.live || list.live.length == 0) ? "none" : "block");
+        live(document.getElementById("list")).style.display = live(() => show.live ? "block" : "none");
+        live(document.getElementById("empty")).style.display = live(() => list.live.length == 0 ? "block" : "none");
+        // The children property of a live DOM element returns a live array of its children
+        live(document.getElementById("count")).innerHTML = live(() => listEl.children.length + " element(s)");
+
+    </script>
+
+</body>
+
+</html>

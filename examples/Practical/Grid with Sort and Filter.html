@@ -1,0 +1,133 @@
+<html>
+
+<head>
+    <style>
+        table {
+            border: 2px solid #42b983;
+            border-radius: 3px;
+            background-color: #fff;
+        }
+
+        th {
+            background-color: #42b983;
+            color: rgba(255, 255, 255, 0.66);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        td {
+            background-color: #f9f9f9;
+        }
+
+        th,
+        td {
+            min-width: 120px;
+            padding: 10px 20px;
+        }
+
+        th.active {
+            color: #fff;
+        }
+
+        th.active .arrow {
+            opacity: 1;
+        }
+
+        .arrow {
+            display: inline-block;
+            vertical-align: middle;
+            width: 0;
+            height: 0;
+            margin-left: 5px;
+            opacity: 0.66;
+        }
+
+        .arrow.asc {
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 4px solid #fff;
+        }
+
+        .arrow.dsc {
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div>Search <input id="filter"></div>
+    <table id="table">
+        <thead>
+            <tr></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script src="../live.js"></script>
+    <script src="../iframe.js"></script>
+    <script>
+        // Input data for the table
+        let data = [
+            { name: 'Chuck Norris', power: Infinity },
+            { name: 'Bruce Lee', power: 9000 },
+            { name: 'Jackie Chan', power: 7000 },
+            { name: 'Jet Li', power: 8000 }
+        ];
+        let headers = ["Name", "Power"];
+
+        // The state of the UI is captured by 4 live variables
+        let order = live({ col: "name", asc: true });          // user defined order by clicking on headers
+        let filter = live(document.getElementById("filter"));  // user defined filter
+        let displayed = live([]);                              // ordered and filtered data source for the table
+        let liveheaders = live(headers.slice());               // live headers for the table
+
+        // This live function computes the rows according to the order and filter
+        live(() => {
+            data.sort((a, b) => {
+                let left, right;
+                if (order.live.asc) { left = a; right = b; } else { left = b; right = a; }
+                return new String(left[order.live.col]).localeCompare(new String(right[order.live.col]));
+            });
+            if (filter.value.live == "") {
+                displayed.live = data;
+            } else {
+                displayed.live = [];
+                let lower = filter.value.live.toLocaleLowerCase();
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i].name.toLocaleLowerCase().indexOf(lower) != -1 ||
+                        new String(data[i].power).toLocaleLowerCase().indexOf(lower) != -1) displayed.live.push(data[i]);
+                }
+            }
+        });
+        // This live function computes the headers according to the order
+        live(() => {
+            for (let i = 0; i < headers.length; i++) {
+                if (order.live.col == headers[i].toLocaleLowerCase()) {
+                    liveheaders.live[i] = headers[i] + " " + (order.live.asc ? "&uarr;" : "&darr;");
+                } else {
+                    liveheaders.live[i] = headers[i];
+                }
+            }
+        });
+        // Sets the live headers of the time as well as their click listener
+        live(document.querySelector("#table thead tr")).mapChildren(liveheaders,
+            (item) => `<th>${item}</th>`,
+            (item, el, i) => {
+                el.addEventListener("click", () => {
+                    if (headers[i].toLocaleLowerCase() == order.live.col) {
+                        order.live.asc = !order.live.asc;
+                    } else {
+                        order.live = {
+                            col: headers[i].toLocaleLowerCase(),
+                            asc: true
+                        }
+                    }
+                })
+            });
+        // Sets the rows of the table
+        live(document.querySelector('#table tbody')).mapChildren(displayed, (item) => `<tr><td>${item.name}</td><td>${item.power}</td></tr>`);
+    </script>
+</body>
+
+</html>

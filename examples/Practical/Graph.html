@@ -1,0 +1,132 @@
+<html>
+<style>
+    /* No <style> tags present */
+    /* No <style> tags present */
+    polygon {
+        fill: #42b983;
+        opacity: 0.75;
+    }
+
+    circle {
+        fill: transparent;
+        stroke: #999;
+    }
+
+    text {
+        font-size: 10px;
+        fill: #666;
+    }
+
+    label {
+        display: inline-block;
+        margin-left: 10px;
+        width: 20px;
+    }
+
+    #raw {
+        position: absolute;
+        top: 0;
+        left: 300px;
+    }
+</style>
+
+<body>
+    <div id="container">
+        <svg width="200" height="200">
+        </svg>
+    </div>
+
+    <div id="controls">
+        <div><label>D</label><input type="range" min="0" max="100"><span>68</span><button class="remove">X</button>
+        </div>
+        <div><label>E</label><input type="range" min="0" max="100"><span>100</span><button class="remove">X</button>
+        </div>
+        <div><label>F</label><input type="range" min="0" max="100"><span>100</span><button class="remove">X</button>
+        </div>
+        <div><label>Test</label><input type="range" min="0" max="100"><span>100</span><button class="remove">X</button>
+        </div>
+    </div>
+    <form id="add"><input name="newlabel"><button>Add a Stat</button></form>
+    <pre id="raw"></pre>
+    <script src="../live.js"></script>
+    <script src="../iframe.js"></script>
+    <script>
+        // As usual, we use a live variable to capture the state.
+        // Note that live arrays are shallow live: only array mutations are reactive by default,
+        // mutations of array's elements are not. Of course, one can use live entities inside the
+        // array to achieve this behavior when needed.
+        let data = live([{
+            "label": "A",
+            "value": live(100)
+        }, {
+            "label": "B",
+            "value": live(100) 
+        }, {
+            "label": "C",
+            "value": live(100) 
+        }, {
+            "label": "D",
+            "value": live(100) 
+        }, {
+            "label": "E",
+            "value": live(100) 
+        }, {
+            "label": "F",
+            "value": live(100) 
+        }]);
+
+
+        live(document.getElementById("raw")).innerHTML = live(()=>JSON.stringify(data,null,4)); 
+
+        // mapChildren can take a third parameter: a callback function that is called after the child element was inserted into the DOM.
+        // This function gives an opportunity to further configure the inserted child element.
+        live(document.getElementById("controls")).mapChildren(data,
+            (item) => `<div><label>${item.label}</label><input type="range" min="0" max="100"><span></span><button class="remove">X</button></div>`,
+            (item, el) => {
+                let input = live(el.querySelector("input"));
+                // The initial value of the input comes from the item.
+                input.value.live = item.value.live;
+                // While the value of item should be updated live according to input.
+                item.value=input.value;
+                live(el.querySelector("span")).innerHTML = item.value;
+                el.querySelector("button").addEventListener("click", () => {
+                    data.live.splice(data.live.indexOf(item), 1);
+                });
+            });
+
+        document.querySelector("#add button").addEventListener('click', (event) => {
+            data.live.push({
+                label: document.querySelector('#add input').value,
+                value: live(100)
+            });
+            document.querySelector('#add input').value = "";
+            event.preventDefault();
+        });
+
+        // SVG elements have their own DOM independent (separate namespace) from the regular one, which makes mutating them on the fly a bit tricky.
+        // To work around this issue, we set the innerHTML of the (regular) DOM element which contains the svg element.
+        // So, we are not using mapChildren, just a regular live function. 
+        // There is a loss of performance compared to mapChildren, unnoticeable by the user in practice.
+        live(() => {
+            let svg = [`<svg width="200" height="200">`];
+            let points = [];
+            for (let i = 0; i < data.live.length; i++) {
+                let angle = -2 * Math.PI * i / data.live.length + Math.PI;
+                let dist = data.live[i].value.live * 0.80;
+                points.push(`${Math.sin(angle) * dist + 100},${Math.cos(angle) * dist + 100}`);
+            }
+            svg.push(`<polygon points="${points.join(' ')}"></polygon>`);
+            svg.push(`<circle cx="100" cy="100" r="80"></circle>`);
+            for (let i = 0; i < data.live.length; i++) {
+                let angle = -2 * Math.PI * i / data.live.length + Math.PI;
+                let dist = data.live[i].value.live * 0.85;
+                svg.push(`<text x="${Math.sin(angle) * dist + 100}" y="${Math.cos(angle) * dist + 100}">${data.live[i].label}</text>`);
+            }
+            svg.push('</svg>')
+            document.getElementById("container").innerHTML = svg.join('\n');
+        });
+
+    </script>
+</body>
+
+</html>

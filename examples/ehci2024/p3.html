@@ -1,0 +1,34 @@
+<html>
+
+<body>
+    <script src="live.js"></script>
+    <script src="jsonreactivedom.js"></script>
+    <script>
+        const _CONTACTS_ = Symbol('contacts');
+        build.builders._CONTACTS_ = (model) => {
+            let rows = model.data.map((contact) => {
+                return {
+                    _TR_,
+                    children: [{ _TD_, innerText: contact.name },
+                    { _TD_, innerText: contact.surname },
+                    { _TD_, innerText: contact.email }]
+                }
+            });
+            return build.build(
+                {
+                    child: {
+                        _TBODY_,
+                        children: rows
+                    }
+                }, _TABLE_);
+        }
+
+        const ui ={
+            _CONTACTS_, data:[{ name: "Albert", surname: "Einstein", email: "albert.einstein@science.org" }, { name: "Charles", surname: "Darwin", email: "charles.darwin@science.org" }]
+        }
+
+        document.body.appendChild(build(ui));
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Mocha Tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css" />
+</head>
+
+<body>
+    <div id="mocha"></div>
+
+    <hr>
+    <input id="in1"><br>
+    <input id="in2"><br>
+    <div id="message"></div>
+    <hr>
+    <button id="but1">Toggle List</button>
+    <button id="but2">Push Number</button>
+    <button id="but3">Pop Number</button>
+    <button id="but4">Reverse List</button>
+    <ul id="list">
+    </ul>
+    <p id="hidden">List is not empty, but hidden.</p>
+    <p id="empty">List is empty.</p>
+    <hr>
+    <div id="prop"></div>
+    <script src="https://unpkg.com/chai/chai.js"></script>
+    <script src="https://unpkg.com/mocha/mocha.js"></script>
+    <script src="../examples/live.js"></script>
+
+    <script class="mocha-init">
+        mocha.setup('bdd');
+        mocha.checkLeaks();
+    </script>
+    <script>
+        const { assert, expect, should } = chai;
+
+        describe('Properties', function () {
+            it('value', function () {
+                let in0 = live(document.getElementById("in1"));
+                let in1 = live(document.getElementById("in2"));
+                let msg = live(document.getElementById("message"));
+                in0.value = in1.value;
+                in1.value = in0.value;
+                msg.innerHTML = in1.value;
+                expect(in0.value.live).to.equals("");
+                in0.value.live = "Hello";
+                expect(msg.innerHTML.live).to.equals("Hello");
+            });
+        })
+
+        describe('DOM', function () {
+            it('mapChildren', function () {
+
+                let list = live([1, 2, 3]);
+                let show = live(true);
+                document.getElementById("but1").addEventListener("click",()=>{ show.live = !show.live});
+                document.getElementById("but2").addEventListener("click",()=>{ list.live.push(list.live.length + 1)});
+                document.getElementById("but3").addEventListener("click",()=>{ list.live.pop()});
+                document.getElementById("but4").addEventListener("click",()=>{ list.live.reverse()});
+
+                let listEl=live(document.getElementById("list"));
+
+                listEl.mapChildren(
+                    list,
+                    "<li></li>",
+                    (item, el) => {
+                        el.innerHTML = item;
+                    }
+                )
+
+                listEl.children.addChangeListener(()=>{
+                    console.log(listEl.children.live.length+" elements");
+                });
+
+                live(document.getElementById("hidden")).style.display = live(() => (show.live || list.live.length == 0) ? "none" : "block");
+                live(document.getElementById("list")).style.display = live(() => show.live ? "block" : "none");
+                live(document.getElementById("empty")).style.display = live(() => list.live.length == 0 ? "block" : "none");
+            });
+
+            it('remapProperty', function() {
+                let el=live(document.getElementById("prop"));
+                let a0=live("Hello");
+                el.innerHTML=a0;
+                expect(el.live.innerHTML).to.equal("Hello");
+                a0.live="World";
+                expect(el.live.innerHTML).to.equal("World");
+                el.innerHTML=live("OK");
+                a0.live="Not OK";
+                expect(el.live.innerHTML).to.equal("OK");
+            });
+
+            it('unbind dom element', function() {
+                let el=live(document.getElementById("prop"));
+                let a0=live("Hello");
+                el.innerHTML=a0;
+                expect(document.getElementById("prop").innerHTML).to.equal("Hello");
+                el.live=0;
+                a0.live="World";
+                expect(document.getElementById("prop").innerHTML).to.equal("Hello");
+            });
+        })
+
+
+    </script>
+    <script class="mocha-exec">
+        mocha.run();
+    </script>
+</body>
+
+</html>

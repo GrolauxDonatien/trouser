@@ -1,0 +1,73 @@
+<html>
+
+<head>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+        }
+
+        body>* {
+            flex-grow: 1;
+        }
+    </style>
+    <link href="../codemirror.css" rel="stylesheet">
+</head>
+
+<body>
+    <textarea id="editor"></textarea>
+    <div id="renderer"></div>
+    <script src="../codemirror.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../live.js"></script>
+    <script src="../iframe.js"></script>
+    <script>
+        // With JavaScriptLive, using regular JavaScript libraries is very easy.
+        // Instead of coupling the libraries together through their own custom APIs,
+        // we tie them independently to live variables.
+        // Then we can couple them together using live functions.
+
+        // For the previewer, we use https://github.com/markedjs/marked
+        function markDownPreviewer(el) {
+            let content = live('');
+            live(el).innerHTML = live(() => marked.parse(content.live));
+            return content;
+        }
+
+        // For the editor, we use https://codemirror.net/5/
+        function markDownEditor(el) {
+            let content = live('');
+            let editor = CodeMirror.fromTextArea(el, {
+                mode: "markdown",
+                lineNumbers: true
+            });
+            editor.on('change', (event) => {
+                content.live = editor.getDoc().getValue();
+            });
+            // Instead of a live function, we can also use addChangeListener on a live entity
+            // The addChangeListener brings a different set of garantees than live functions:
+            // The registered listeners are always called after all live updates are completed, and they are called only once.
+            content.addChangeListener(() => {
+                // We need to be careful and check that the current value of the live variable 
+                // is not already the current text displayed, otherwise CodeMirror would reset it which changes the carret position.
+                if (editor.getDoc().getValue()!=content.live) editor.getDoc().setValue(content.live);
+            });
+            return content;
+        }
+
+        let previewer = markDownPreviewer(document.getElementById("renderer"));
+        let editor = markDownEditor(document.getElementById("editor"))
+        // A simple live function synchronizes the live variables
+        live(() => previewer.live = editor.live);
+        // Set the initial text
+        editor.live = "# hello"
+        // A very nice property of this approach, is the freedom we get in coupling the code afterwards.
+        // For example, if we save the user's edits in a localStorage, we can just uncomment these lines:
+        /*
+        live(()=>localStorage.setItem("markdown",editor.live));
+        editor.live=localStorage.getItem("markdown")||editor.live;
+        */
+    </script>
+</body>
+
+</html>

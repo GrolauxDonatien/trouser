@@ -1,0 +1,71 @@
+<html>
+<style>
+    canvas {
+        cursor: crosshair;
+    }
+
+    p {
+        position: fixed;
+        top: 50%;
+        color: lightgray;
+    }
+</style>
+
+<body>
+    <p class="tip"> Click and drag on the canvas to draw a circle. </p>
+    <canvas id="canvas" width="1024" height="800"></canvas>
+    <script src="../live.js"></script>
+    <script src="../iframe.js"></script>
+    <script>
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+
+        // As usual, live variables to capture the interactive state of the interface
+        // First variable to capture the array of drawn circles.
+        let circles = live([]);
+        // Second variable to capture the current drawing of a new circle.
+        let drawing = live({});
+
+        // Let's define how to draw the canvas
+        function redraw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < circles.live.length; i++) {
+                ctx.beginPath();
+                let c = circles.live[i];
+                ctx.arc(c.x, c.y, c.r, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            if ("x" in drawing.live) {
+                ctx.beginPath();
+                ctx.arc(drawing.live.x, drawing.live.y, drawing.live.r, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+        }
+
+        // We juste need to make the redraw function live. As the function depends on live variables,
+        // it will be called automatically whenever they are updated.
+        live(redraw)
+
+        // Manage the interaction: mousedown/move/up
+        canvas.addEventListener("mousedown", (event) => {
+            drawing.live.x = event.offsetX;
+            drawing.live.y = event.offsetY;
+            drawing.live.r = 0;
+        });
+        canvas.addEventListener("mousemove", (event) => {
+            if ("x" in drawing.live) {
+                drawing.live.r = Math.sqrt((event.offsetX - drawing.live.x) * (event.offsetX - drawing.live.x)
+                    + (event.offsetY - drawing.live.y) * (event.offsetY - drawing.live.y));
+            }
+        });
+        canvas.addEventListener("mouseup", (event) => {
+            if ("x" in drawing.live) {
+                circles.live.push(drawing.live);
+                drawing.live={};
+            }
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "",
+  "isOrdered": true,
+  "folders": {
+    "coverage": {
+      "name": "coverage",
+      "isOrdered": true,
+      "folders": {},
+      "files": {}
+    },
+    "test": {
+      "name": "test",
+      "isOrdered": true,
+      "folders": {},
+      "files": {}
+    }
+  },
+  "files": {
+    "README": 0
+  }
+}

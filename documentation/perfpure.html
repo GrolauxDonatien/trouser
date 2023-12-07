@@ -1,0 +1,26 @@
+<html>
+    <body>
+        <ul id="ul"></ul>
+    <script>
+        let v1=new Date().getTime();
+        let el=document.getElementById("ul");
+        for(let i=0; i<100000; i++) {
+            let c=document.createElement("LI");
+            c.innerText=i;
+            el.appendChild(c);
+        }
+        let v2=new Date().getTime();
+        console.log(v2-v1);
+        /*
+Navigated to file:///Y:/Work/ICHEC/JavaScriptLive/documentation/perfpure.html
+perfpure.html:13 63
+Navigated to file:///Y:/Work/ICHEC/JavaScriptLive/documentation/perfpure.html
+perfpure.html:13 63
+Navigated to file:///Y:/Work/ICHEC/JavaScriptLive/documentation/perfpure.html
+perfpure.html:13 62
+Navigated to file:///Y:/Work/ICHEC/JavaScriptLive/documentation/perfpure.html
+perfpure.html:13 61
+        */
+    </script>
+    </body>
+</html>

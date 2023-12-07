@@ -1,0 +1,45 @@
+<!--
+We can render content conditionally or in a loop with the v-if and v-for directives.
+-->
+
+<script>
+    export default {
+      data() {
+        return {
+          list: []
+        }
+      },
+      methods:{
+        run() {
+          let v1=new Date().getTime();
+                for(let i=0; i<100000; i++) this.list.push(i);
+          let v2=new Date().getTime();
+          this.$nextTick(function () {
+              console.log(v2-v1);
+                });
+        }
+      }
+    }
+    </script>
+    
+    <template>
+      <ul >
+        <li v-for="counter of list">{{ counter }}</li>
+      </ul>
+      <button @click="run">
+        Run
+      </button>
+    </template>
+
+    /*
+    229
+5[Violation] 'click' handler took <N>ms
+7utils.6cad18ba.js:1 [@vue/repl] successfully compiled 1 module.
+VM37 about:srcdoc:160 251
+2utils.6cad18ba.js:1 [@vue/repl] successfully compiled 1 module.
+VM37 about:srcdoc:160 257
+2utils.6cad18ba.js:1 [@vue/repl] successfully compiled 1 module.
+VM37 about:srcdoc:160 217
+2utils.6cad18ba.js:1 [@vue/repl] successfully compiled 1 module.
+VM37 about:srcdoc:160 215
+*/

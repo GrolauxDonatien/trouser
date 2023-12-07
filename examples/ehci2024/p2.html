@@ -1,0 +1,24 @@
+<html>
+    <body>
+        <script src="live.js"></script>
+        <script src="jsonreactivedom.js"></script>
+        <script>
+            let data=[{name:"Albert", surname:"Einstein", email:"albert.einstein@science.org"}, {name:"Charles", surname:"Darwin", email:"charles.darwin@science.org"}];
+
+            let rows=data.map((record)=>{ return {
+                _TR_,
+                children:[{_TD_, innerText:record.name},
+                {_TD_, innerText:record.surname},
+                {_TD_, innerText:record.email}]
+            }});
+
+            const ui={_TABLE_, 
+                child:{_TBODY_,
+                    children:rows
+                }
+            }
+
+            document.body.appendChild(build(ui));
+        </script>
+    </body>
+</html>

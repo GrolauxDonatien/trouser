@@ -1,0 +1,19 @@
+{
+  "name": "playtest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "live.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "",
+  "license": "ISC",
+  "mocha": {},
+  "dependencies": {
+    "chai": "^4.3.7",
+    "express": "^4.18.2"
+  }
+}
