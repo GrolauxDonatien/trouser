@@ -876,7 +876,6 @@ function liveFunc(something, live) {
             switch (prop) {
                 case "live":
                     return () => {
-                        //                        if (obj.uid==901 || obj.uid==902 || obj.uid==903) debugger;
                         if (obj.executing) {
                             return something();
                         } else if ("exception" in obj) {
@@ -900,22 +899,28 @@ function liveFunc(something, live) {
     }
 }
 
-function unify(src,tgt) {
+function unify(src, tgt) {
     /* this is probably not fully working right */
     /* both variables become one which may cause problem when one of them is set to another value => will rewire the other too */
     /* a better solution would be a link mechanism */
-    for(let k in tgt[internal]) {
+    for (let k in tgt[internal].push) { // adjust dependencies, tgt already has a dependency that needs to be redirected to src
+        let peer = tgt[internal].push[k].deref();
+        delete peer[internal].pull[tgt[internal].uid];
+        peer[internal].pull[src[internal].uid] = new WeakRef(src);
+        src[internal].push[peer[internal].uid] = new HardRef(peer);
+    }
+    for (let k in tgt[internal]) {
         delete tgt[internal][k];
     }
-    for(let k in src[internal]) {
-        tgt[internal][k]=src[internal][k];
+    for (let k in src[internal]) {
+        tgt[internal][k] = src[internal][k];
     }
 }
 
 function liveDom(el, live) {
     if (el instanceof HTMLElement || el instanceof SVGElement) {
         if ("live" in el) {
-            unify(el.live,live);
+            unify(el.live, live);
             return live;
         }
         live[internal].type = "Element";
@@ -930,6 +935,7 @@ function liveDom(el, live) {
         // where prefix is the querySelectorAll filter, or internal for serializeObject
 
         function getDomProp(prop, event, prefix) {
+//            if (prop=="value") debugger;
             function setter(value) {
                 if (prefix) {
                     el[prefix][prop] = value;
@@ -943,12 +949,12 @@ function liveDom(el, live) {
                 let oset = liveprop[internal].delegate.set;
                 liveprop[internal].delegate.set = (target, prop, value) => {
                     if (prop == 'live') {
-/*                        if (!isEmptyObject(liveprop[internal].pull)) { // this prop has been linked to something live, directly changing the value makes no sense => throw an exception
-                            throw new ReferenceError("Cannot change live value of a property that is currently linked to a live entity");
-                        } else {*/
-                            let ret = oset(target, prop, value);
-                            setter(value);
-                            return ret;
+                        /*                        if (!isEmptyObject(liveprop[internal].pull)) { // this prop has been linked to something live, directly changing the value makes no sense => throw an exception
+                                                    throw new ReferenceError("Cannot change live value of a property that is currently linked to a live entity");
+                                                } else {*/
+                        let ret = oset(target, prop, value);
+                        setter(value);
+                        return ret;
                         //}
                     } else {
                         return oset(target, prop, value);
@@ -1026,6 +1032,8 @@ function liveDom(el, live) {
                 } else {
                     domprop = getDomProp(prop, event, prefix);
                 }
+
+                // this version is unidirectional, value update => prop update
                 let obj = domprop[internal];
                 if (!("pull" in obj)) obj.pull = {};
                 for (let uid in obj.pull) {
@@ -1041,9 +1049,21 @@ function liveDom(el, live) {
                     if (typeof value.live == "function") {
                         obj.state.live = value.live();
                     } else {
-                        obj.state.live = value.live;
+                        createLive(()=>{
+                            domprop.live=value.live;
+                        });
+                        createLive(()=>{
+                            value.live=domprop.live;
+                        });
+
+
+                        /* obj.state.live = value.live; // this alternate implementation does seem to work
+                        mergeLive(domprop,value);
+                        unify(domprop,value); */
+
                     }
                 }
+
                 domprop[internal].notify();
             } else {
                 throw new ReferenceError("Lifted properties of a DOM element can only be assigned to another lifted value");
@@ -1636,7 +1656,7 @@ function liveDom(el, live) {
         obj.delegate.set = (target, prop, value) => {
             switch (prop) {
                 case "value":
-                    return setDomProp(prop, value, "keyup");
+                    return setDomProp(prop, value, ["keyup","input"]);
                 case "innerHTML":
                 case "innerText":
                     return setDomProp(prop, value, "focusout");

@@ -1,0 +1,46 @@
+<html>
+
+<body>
+    <div id="todo"></div>
+    <script src="../../live.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        // JavaScriptLive has not particular support for components.
+        // However, live variables offer a generic mechanism which can be used as a replacement for APIs.
+        // By capturing the evolving states of components into one or more live variables,
+        // the manipulation of the component is reduced to the manipulation of live variables.
+        // Furthermore, components can also directly use live entities to benefit from their properties.
+        function todoItem(el) {
+            // This function creates a component, however instead of returning an API, it returns a live object.
+            // This live object stores the keys and the items in the todo list.
+            let list = live({});
+            // Internally, we will use mapChildren to configure the DOM according to list.
+            // However, mapChildren requires a live array to work on, not an object.
+            // This is for optimization purposes: mapChildren will not render every children for each update, 
+            // just those that are changed in the live array.
+            // Fortunately, it is easy to convert the live object keys to a live array using a live function.
+            let liveArray = live([]);
+            live(() => liveArray.live = Object.keys(list.live));
+            // Important: even though live functions are just lifted versions of regular JavaScript functions,
+            // there exists restrictions on what they can do: some functions are safe to use as live functions,
+            // while others are not. A live function should only have closures on live entities. 
+            // For each such closure, either the function access the live entity, or mutates it,
+            // but not both. In other words, live functions are safe as long as they create forward mutations 
+            // from one set of live entities to a distinct different set of live entities.
+            live(el).mapChildren(liveArray,
+                (item) =>
+                    `<p>${item}. ${list.live[item]}</p>`);
+            return { list }
+        }
+
+        let todo = todoItem(document.getElementById("todo"));
+        todo.list.live = {
+            0: "Vegetables",
+            1: "Cheese",
+            2: "Whatever else humans are supposed to eat"
+        }
+
+    </script>
+</body>
+
+</html>

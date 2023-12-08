@@ -1,0 +1,27 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+
+        // the live msg variable serves as a counter, incremented every second
+        let msg = live(0);
+        setInterval(() => { msg.live++; }, 1000)
+
+        // Notice how innerHTML is defined as a function. When a static property or attribute of a DOM element
+        // is defined as a function, trouser automatically uplift the function so that reactive programming takes place.
+        // As this function references the reactive msg variable (using msg.live), each time this variable changes,
+        // the function is called back and its result is set as the new innerHTML.
+        const model={
+            _H1_,
+            innerHTML:() => ["Hello","World","Hellow World"][msg.live %3]
+        }
+
+        document.body.appendChild(build(model));
+
+    </script>
+</body>
+
+</html>

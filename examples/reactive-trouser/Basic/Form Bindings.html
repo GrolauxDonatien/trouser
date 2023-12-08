@@ -1,0 +1,129 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        // For validation purpose, we will need to reference the form
+        let form = live(null); // We use this reactive variable to capture the live reference to the form, using the handle attribute in the model definition.
+
+        // trouser provide a reactive "serializeObject" attribute for reactive form elements. This is a convenience for obtaining the values of the fields of the form.
+        let model = {
+            _FORM_,
+            handle: form, // the attribute set the live variable to the live form
+            children: [
+                {
+                    _INPUT_,
+                    type: "text",
+                    name: "in1"
+                }, { _BR_ },
+                {
+                    _INPUT_,
+                    type: "radio",
+                    name: "radio",
+                    value: 1
+                },
+                {
+                    _INPUT_,
+                    type: "radio",
+                    name: "radio",
+                    value: 2
+                },
+                {
+                    _INPUT_,
+                    type: "radio",
+                    name: "radio",
+                    value: 3
+                },
+                {
+                    _INPUT_,
+                    type: "radio",
+                    name: "radio",
+                    value: 4,
+                    checked: true
+                }, { _BR_ },
+                {
+                    _INPUT_,
+                    type: "checkbox",
+                    name: "checkbox",
+                }, { _BR_ },
+                {
+                    _SELECT_,
+                    name: "selectsingle",
+                    children: [{
+                        _OPTION_
+                    }, {
+                        _OPTION_,
+                        value: 1,
+                        innerHTML:1
+                    }, {
+                        _OPTION_,
+                        value: 2,
+                        innerHTML:2
+                    }, {
+                        _OPTION_,
+                        value: 3,
+                        innerHTML:3
+                    }, {
+                        _OPTION_,
+                        value: 4,
+                        innerHTML:4
+                    }]
+                }, { _BR_ },
+                {
+                    _SELECT_,
+                    name: "selectmultiple",
+                    multiple: "multiple",
+                    children: [{
+                        _OPTION_
+                    }, {
+                        _OPTION_,
+                        value: 1,
+                        innerHTML:1
+                    }, {
+                        _OPTION_,
+                        value: 2,
+                        innerHTML:2
+                    }, {
+                        _OPTION_,
+                        value: 3,
+                        innerHTML:3
+                    }, {
+                        _OPTION_,
+                        value: 4,
+                        innerHTML:4
+                    }]
+                }, { _BR_ },
+                {
+                    _TEXTAREA_,
+                    name: "ta"
+                },
+                {
+                    _DIV_,
+                    innerHTML() {
+                        let data = form.serializeObject; // the live form gives an access to its live serializeObject attribute
+                        // The serializObject can be used has a shorthand access to live values of the form components
+                        if (data.in1 == "") return "Please, fill the text in";
+                        if (data.radio != "2") return "Please, tick the second radio button";
+                        if (!data.checkbox) return "Please, tick the checkbox";
+                        if (data.selectsingle == null) return "Please, select an option in the dropdown list box";
+                        if (data.ta == "") return "Please, fill the text area in";
+                        return "";
+                    }
+                },
+                {
+                    _PRE_,
+                    innerHTML() {
+                        return JSON.stringify(form.serializeObject, null, 4);
+                    }
+                }
+            ]
+        }
+
+        document.body.appendChild(build(model));
+
+    </script>
+</body>
+
+</html>

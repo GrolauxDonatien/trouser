@@ -1,0 +1,106 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        // we can register model transformation functions in order to simplify the model.
+
+        const _SSELECT_ = Symbol('sselect'); // The first step is to create a Symbol respecting the convention _UPPERCASENAME_=Symbol('lowercasename')
+        build.builders._SSELECT_ = (model) => { // Adding this key to build.builders registers the model transformation function
+            model.children = model.options.map((value) => { // we change the input model as needed
+                return {
+                    _OPTION_,
+                    value,
+                    innerText: value
+                }
+            });
+            delete model.options;
+            return build.build(model, _SELECT_); // and forwards the resulting model to build.build. 
+            // Note that the input model was stripped of its type (_SSELECT_ here), and its transformed type is now the second parameter given to build.build.
+        }
+
+        const _RADIOS_ = Symbol("radios");
+        build.builders._RADIOS_ = (model) => {
+            // in this example, we build a new model instead of manipulating the input one.
+            return build.build({ 
+                children: model.values.map((value) => {
+                    return {
+                        _INPUT_,
+                        type: "radio",
+                        name: model.name,
+                        value,
+                        checked: model.checked == value
+                    }
+                })
+            }, _SPAN_);
+        }
+
+        // We can now use these two new types to simplify future models.
+
+        // For validation purpose, we will need to reference the form
+        let form = live(null); // We use this reactive variable to capture the live reference to the form
+        let model = {
+            _FORM_,
+            handle: form, // the attribute set the live variable to the live form
+            children: [
+                {
+                    _INPUT_,
+                    type: "text",
+                    name: "in1"
+                }, { _BR_ },
+                {
+                    _RADIOS_,
+                    name: "radio",
+                    values: [1, 2, 3, 4],
+                    checked: 4
+                }, { _BR_ },
+                {
+                    _INPUT_,
+                    type: "checkbox",
+                    name: "checkbox",
+                }, { _BR_ },
+                {
+                    _SSELECT_,
+                    name: "selectsingle",
+                    options: ["", 1, 2, 3, 4]
+                }, { _BR_ },
+                {
+                    _SSELECT_,
+                    name: "selectsingle",
+                    multiple: "multiple",
+                    options: [1, 2, 3, 4]
+                }, { _BR_ },
+                {
+                    _TEXTAREA_,
+                    name: "ta"
+                },
+                {
+                    _DIV_,
+                    innerHTML() {
+                        let data = form.serializeObject; // the live form gives an access to its live serializeObject attribute
+                        // The serializObject can be used has a shorthand access to live values of the form components
+                        if (data.in1 == "") return "Please, fill the text in";
+                        if (data.radio != "2") return "Please, tick the second radio button";
+                        if (!data.checkbox) return "Please, tick the checkbox";
+                        if (data.selectsingle == null) return "Please, select an option in the dropdown list box";
+                        if (data.ta == "") return "Please, fill the text area in";
+                        return "";
+                    }
+                },
+                {
+                    _PRE_,
+                    innerHTML() {
+                        return JSON.stringify(form.serializeObject, null, 4);
+                    }
+                }
+            ]
+        }
+
+        document.body.appendChild(build(model));
+
+    </script>
+</body>
+
+</html>

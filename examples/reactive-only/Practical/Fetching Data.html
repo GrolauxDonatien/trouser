@@ -1,0 +1,22 @@
+<html>
+
+<body>
+    <ul id="messages"></ul>
+    <script src="../../live.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        // This example illustrates how live variable decouples the fetching of data
+        // and displaying its content in the page.
+        let posts=live([]);
+
+        fetch("https://gorest.co.in/public/v2/posts", {
+            method:"GET"
+        }).then((response)=> response.json())
+        .then((data)=>posts.live=data);
+
+        live(document.getElementById("messages")).mapChildren(posts,
+        (item)=>`<div><h3>${item.title}</h3><p>${item.body}</p></div>`);
+    </script>
+</body>
+
+</html>

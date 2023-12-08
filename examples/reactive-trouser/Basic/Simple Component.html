@@ -1,0 +1,31 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+
+        let list = live([
+            "Vegetables",
+            "Cheese",
+            "Whatever else humans are supposed to eat"
+        ]);
+
+        // Other examples use "mapChildren" to map the list to a suitable model
+        // "mapChildren" is more efficient, because it is backed by a live array for which the fine grained events
+        // are forwarded to the UI (add just one line, remove just one line, and so forth).
+        //
+        // In this example, we use "children", which works too but would, at runtime, recompute the whole array each time.
+
+        const model = {
+            _DIV_,
+            children: () => list.live.map((item, index) => { return { _P_, innerText() { return `${index + 1}. ${item}`; } } })
+        }
+
+        document.body.appendChild(build(model));
+
+    </script>
+</body>
+
+</html>

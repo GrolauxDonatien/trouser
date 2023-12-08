@@ -1,0 +1,41 @@
+<html>
+
+<body>
+    <p>
+        <span>Hover your mouse over me for a few seconds to see my dynamically bound title!</span>
+    </p>
+
+    <p onclick="toggleRed()" id="p1">
+        This should be red... but click me to toggle it.
+    </p>
+
+    <p onclick="toggleColor()" id="p2">
+        This should be green, and should toggle between green and blue on click.
+    </p>
+    <script src="../../live.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+
+        // let's capture the states of this example app into live variables
+        let title = live("Hello World!");
+        let isRed = live(true);
+        let color = live('green');
+
+        function toggleRed() {
+            isRed.live = !isRed.live
+        };
+        function toggleColor() {
+            color.live = (color.live === "green" ? "blue" : "green")
+        };
+
+        // we juste need to link the live variable to their relevant property of the live DOM element
+        live(document.getElementsByTagName("span")[0]).title = title;
+        live(document.getElementById("p2")).style.color = color;
+        // the live isRed is a boolean, however we need a color name
+        // let's use a live function to map the data
+        live(document.getElementById("p1")).style.color = live(() => isRed.live ? "red" : "black");
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Donatien Grolaux">
+    <link href="../lib/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/codemirror.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+    <title>JavaScriptLive Examples</title>
+
+</head>
+
+<body>
+    <main>
+        <div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white" style="width:10%">
+            <a href="/" class="d-flex align-items-center pb-3 mb-3 link-dark text-decoration-none border-bottom">
+                <span class="fs-5 fw-semibold">Examples</span>
+            </a>
+            <ul class="list-unstyled ps-0" id="examples">
+
+            </ul>
+        </div>
+
+        <div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white" style="width:60%">
+            <a href="/" class="d-flex align-items-center pb-3 mb-3 link-dark text-decoration-none border-bottom">
+                <span class="fs-5 fw-semibold">JavaScript</span>
+            </a>
+            <div id="code"></div>
+        </div>
+        <div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white" style="width:30%" id="preview">
+            <a href="/" class="d-flex align-items-center pb-3 mb-3 link-dark text-decoration-none border-bottom">
+                <span class="fs-5 fw-semibold">Preview</span>
+            </a>
+        </div>
+
+        <script src="../lib/bootstrap.bundle.min.js"></script>
+        <script src="../lib/codemirror.js"></script>
+        <script src="../live.js"></script>
+        <script src="examples.js"></script>
+        <script>
+            // the examples are inspired by: https://vuejs.org/examples/#simple-component
+            let files = {
+                "Basic": ["Hello World", "Handling User Inputs", "Attribute Bindings", "Conditionals and Loops", "Form Bindings", "Simple Component"],
+                "Practical": ["Markdown", "Fetching Data", "Grid with Sort and Filter", "Graph", "Todo"],
+                "GUIs": ["Counter", "Temperature Converter", "Flight Booker", "Timer", "CRUD", "Circles", "Cells"],
+                "Transformative Functions": ["Form Bindings"]
+            }
+            runExamples(files);
+        </script>
+    </main>
+</body>
+
+</html>

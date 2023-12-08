@@ -1,0 +1,21 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        counter = live(0);
+        const model = {
+            _DIV_,
+            children: [
+                { _SPAN_, innerHTML() {return counter.live+" ";} },
+                { _BUTTON_, listener: { click() { counter.live++ } }, innerHTML:"Count" }
+            ]
+        }
+
+        document.body.appendChild(build(model));
+    </script>
+</body>
+
+</html>

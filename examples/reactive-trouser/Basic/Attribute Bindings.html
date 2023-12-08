@@ -1,0 +1,55 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+
+        // let's capture the states of this example app into live variables
+        let title = live("Hello World!");
+        let isRed = live(true);
+        let color = live('green');
+
+        // This example uses a mix for reactive functions and reactive variables bound to CSS style attributes.
+        const model = {
+            _DIV_,
+            children: [
+                {
+                    _P_,
+                    innerText: "Hover your mouse over me for a few seconds to see my dynamically bound title!",
+                    title
+                },
+                {
+                    _P_,
+                    innerText: "This should be red... but click me to toggle it.",
+                    listener: {
+                        click() {
+                            isRed.live = !isRed.live
+                        }
+                    },
+                    style: {
+                        color() { return isRed.live ? "red" : "black"; }
+                    }
+                },
+                {
+                    _P_,
+                    innerText: "This should be green, and should toggle between green and blue on click.",
+                    listener: {
+                        click() {
+                            color.live = (color.live === "green" ? "blue" : "green")
+                        }
+                    },
+                    style: {
+                        color
+                    }
+                }
+            ]
+        }
+
+        document.body.appendChild(build(model));
+
+    </script>
+</body>
+
+</html>

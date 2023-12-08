@@ -1,0 +1,47 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        // This example illustrates how live variable decouples the fetching of data
+        // and displaying its content in the page.
+        let posts = live([]);
+
+        const model = {
+            _UL_,
+            mapChildren: {
+                array: posts,
+                render(item, index) {
+                    return {
+                        _DIV_,
+                        children: [{
+                            _H3_,
+                            innerText: item.title
+                        },
+                        {
+                            _P_,
+                            innerText: item.body
+                        }]
+                    }
+                }
+            }
+        }
+
+        document.body.appendChild(build(model));
+
+        fetch("https://gorest.co.in/public/v2/posts", {
+            method: "GET"
+        }).then((response) => response.json())
+            .then((data) => posts.live = data);
+
+        // For a more sophisticated approach, one could use a websocket to sends diff to the reactive array.
+        // By using "mapChildren", we ensure that the DOM updates are optimal. Fine-grained updates of the reactive array
+        // are captured internally (add an item, remove an item), 
+        // and only this equivalent DOM manipulation is performed (add a child, remove a child).
+
+    </script>
+</body>
+
+</html>

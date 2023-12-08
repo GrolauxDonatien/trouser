@@ -1,0 +1,42 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+
+        const message = live("Hello World!");
+
+        // the innerHTML of _H1_ is set to this reactive variable. Each time
+        // the variable is updated, the innerHTML of _H1_ will be updated too.
+        const model = {
+            _DIV_,
+            children: [
+                {
+                    _H1_,
+                    innerHTML: message
+                },
+                {
+                    _BUTTON_,
+                    innerText: "Reverse Message",
+                    listener: {
+                        click() { message.live = message.live.split('').reverse().join(''); }
+                    }
+                },
+                {
+                    _BUTTON_,
+                    innerText: 'Append "!"',
+                    listener: {
+                        click() { message.live = message.live + "!"; }
+                    }
+                }
+            ]
+        }
+
+        document.body.appendChild(build(model));
+
+    </script>
+</body>
+
+</html>

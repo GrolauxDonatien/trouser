@@ -1,0 +1,43 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+
+        const celsius = live(null);
+        const fahrenheit = live(null);
+
+        const model = {
+            _DIV_,
+            children: [
+                {
+                    _INPUT_,
+                    type: "number",
+                    handle: celsius,
+                    value() {
+                        if (fahrenheit.live!=null && fahrenheit.value.live != "")
+                            return (parseFloat(fahrenheit.value.live) - 32) * (5 / 9)
+                    }
+                },
+                " Celsius = ",
+                {
+                    _INPUT_,
+                    type: "number",
+                    handle: fahrenheit,
+                    value() {
+                        if (celsius.live!=null && celsius.value.live != "")
+                            return (parseFloat(celsius.value.live) * (9 / 5) + 32);
+                    }
+                },
+                " Fahrenheit"
+            ]
+        }
+
+        document.body.appendChild(build(model));
+
+    </script>
+</body>
+
+</html>

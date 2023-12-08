@@ -1,0 +1,124 @@
+<html>
+<style>
+    /* No <style> tags present */
+    /* No <style> tags present */
+    polygon {
+        fill: #42b983;
+        opacity: 0.75;
+    }
+
+    circle {
+        fill: transparent;
+        stroke: #999;
+    }
+
+    text {
+        font-size: 10px;
+        fill: #666;
+    }
+
+    label {
+        display: inline-block;
+        margin-left: 10px;
+        width: 20px;
+    }
+
+    #raw {
+        position: absolute;
+        top: 0;
+        left: 300px;
+    }
+</style>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        let data = live(["A", "B", "C", "D", "E", "F"].map((l) => { return { label: l, value: live(100) } }));
+
+        const form = live(null);
+        const model = {
+            _DIV_,
+            children: [{
+                _DIV_,
+                innerHTML() { // SVG has its own DOM, not supported by trouser right now. We just use HTML instead.
+                    let svg = [`<svg width="200" height="200">`];
+                    let points = [];
+                    for (let i = 0; i < data.live.length; i++) {
+                        let angle = -2 * Math.PI * i / data.live.length + Math.PI;
+                        if (!("value" in data.live[i])) return;
+                        let dist = data.live[i].value.live * 0.80;
+                        points.push(`${Math.sin(angle) * dist + 100},${Math.cos(angle) * dist + 100}`);
+                    }
+                    svg.push(`<polygon points="${points.join(' ')}"></polygon>`);
+                    svg.push(`<circle cx="100" cy="100" r="80"></circle>`);
+                    for (let i = 0; i < data.live.length; i++) {
+                        let angle = -2 * Math.PI * i / data.live.length + Math.PI;
+                        let dist = data.live[i].value.live * 0.85;
+                        svg.push(`<text x="${Math.sin(angle) * dist + 100}" y="${Math.cos(angle) * dist + 100}">${data.live[i].label}</text>`);
+                    }
+                    svg.push('</svg>')
+                    return svg.join('');
+                }
+            }, {
+                _DIV_,
+                mapChildren: {
+                    array: data,
+                    render(item, i) {
+                        return {
+                            _DIV_,
+                            children: [
+                                {
+                                    _LABEL_,
+                                    innerText: item.label
+                                },
+                                {
+                                    _INPUT_,
+                                    type: "range",
+                                    min: 0,
+                                    max: 100,
+                                    value: item.value
+                                },
+                                { _SPAN_, innerTex: item },
+                                {
+                                    _BUTTON_, class: "remove", innerText: "X",
+                                    listener: {
+                                        click() {
+                                            data.live.splice(data.live.indexOf(item), 1);
+                                        }
+                                    }
+                                }
+                            ]
+                        };
+                    }
+                }
+            }, {
+                _FORM_,
+                handle: form,
+                children: [{
+                    _INPUT_, name: "newlabel"
+                }, {
+                    _BUTTON_, innerText: "Add a Stat",
+                    listener: {
+                        click(event) {
+                            data.live.push({
+                                label: form.serializeObject.newlabel, value: live(100)
+                            });
+                            form.serializeObject.newlabel = "";
+                            event.preventDefault();
+                        }
+                    }
+                }]
+            }, {
+                _PRE_,
+                innerText() { return JSON.stringify(data.live, null, 4); }
+            }]
+        }
+
+        document.body.appendChild(build(model));
+
+    </script>
+</body>
+
+</html>

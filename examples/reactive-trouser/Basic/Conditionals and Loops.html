@@ -1,0 +1,71 @@
+<html>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        // This example maps a live array to a live list of DOM elements
+        let list = live([1, 2, 3]);
+        let show = live(true);
+
+        // This examples shows how we can map a reactive array to children elements, using "mapChildren".
+        // Internally, the reactive array is observed for fine grained changes (add/remove element), and the DOM
+        // is dynamically updated for each small change (add/remove one child element).
+        let model = {
+            _DIV_,
+            children: [
+                {
+                    _BUTTON_,
+                    innerText: 'Toggle List',
+                    listener: { "click"() { show.live = !show.live } }
+                },
+                {
+                    _BUTTON_,
+                    innerText: 'Push Number',
+                    listener: { "click"() { list.live.push(list.live.length + 1) } }
+                },
+                {
+                    _BUTTON_,
+                    innerText: 'Pop Number',
+                    listener: { "click"() { list.live.pop() } }
+                },
+                {
+                    _BUTTON_,
+                    innerText: 'Reverse',
+                    listener: { "click"() { list.live.reverse() } }
+                },
+                {
+                    _UL_,
+                    mapChildren: {
+                        array: list,
+                        render: item => { return { _LI_, innerHTML: item } }
+                    },
+                    style: { display() { return show.live ? "block" : "none"; } }
+                },
+                {
+                    _P_,
+                    innerText: "List is not empty, but hidden.",
+                    style: { display() { return (show.live || list.live.length == 0) ? "none" : "block"; } }
+                },
+                {
+                    _P_,
+                    innerText: "List is empty.",
+                    style: { display() { return list.live.length == 0 ? "block" : "none"; } }
+                },
+                {
+                    _P_,
+                    innerHTML() {
+                        return list.live.length + " element(s)";
+                    }
+                }
+            ]
+        }
+
+        document.body.appendChild(build(model));
+
+    </script>
+
+</body>
+
+</html>

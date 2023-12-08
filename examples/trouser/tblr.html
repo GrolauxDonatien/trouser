@@ -1,0 +1,155 @@
+<html>
+<body>
+    <script src="../live.js"></script>
+    <script src="../trouser.js"></script>
+    <script>
+        const _TB_=Symbol("tb");
+        const _LR_=Symbol("lr");
+        const _CONTINUE_=Symbol("cont"); // description is not in sync with variable name to ensure it cannot be used as a component.
+        const _NEWLINE_=Symbol("nl");
+        build.builders._LR_=(what, type)=>{
+            let children=what.children||[];
+            delete what.children;
+            what.child={
+                _TBODY_,
+                children:[
+                ]
+            };
+            let tbody=what.child.children;
+            let cur=null;
+            for(let i=0; i<children.length; i++) {
+                if (cur==null) {
+                    cur={
+                        _TR_,
+                        children:[]
+                    }
+                    tbody.push(cur);
+                }
+                if (children[i]==_NEWLINE_) {
+                    cur=null;
+                } else if (children[i]==_CONTINUE_) {
+                    if (cur.children.length==0) continue;
+                    let last=cur.children[cur.children.length-1];
+                    last.colspan=(last.colspan||1)+1;
+                } else {
+                    cur.children.push({
+                        _TD_,
+                        child:children[i]
+                    });
+                }
+            }
+            build.applyDefaults(what, _TABLE_);
+            return build.build(what,_TABLE_);
+        }
+        build.builders._TB_=(what,type)=>{
+            let children=what.children||[];
+            delete what.children;
+            what.child={
+                _TBODY_,
+                children:[]
+            };
+            let pos=0;
+            let last=null;
+            let tbody=what.child.children;
+            for(let i=0; i<children.length; i++) {
+                if (children[i]==_NEWLINE_) {
+                    pos=0;
+                    last=null;
+                } else if (children[i]==_CONTINUE_) {
+                    if (last==null) {
+                        tbody.push({
+                            _TR_,
+                            children:[{
+                                _TD_
+                            }]
+                        });
+                    } else {
+                        last.rowspan=(last.rowspan||1)+1;
+                    }
+                    pos++;
+                } else {
+                    if (tbody.length<=pos) {
+                        tbody.push({
+                            _TR_,
+                            children:[]
+                        });
+                        if (pos>0 && tbody[pos-1].children.length>1) {
+                            tbody[pos].children.push({
+                                _TD_,
+                                colspan:tbody[pos-1].children.length
+                            });
+                        }
+                    }
+                    last={
+                        _TD_,
+                        children:[children[i]]
+                    };
+                    tbody[pos].children.push(last);
+                    pos++;
+                }
+            }
+            build.applyDefaults(what, _TABLE_);
+            return build.build(what,_TABLE_);
+        }
+    </script>
+    <script>
+        let list = live([1, 2, 3]);
+        let show = live(true);
+
+        let dom = {
+            _LR_,
+            children: [
+                {
+                    _BUTTON_,
+                    innerText: 'Toggle List',
+                    listener: { "click"() { show.live = !show.live } }
+                },
+                {
+                    _BUTTON_,
+                    innerText: 'Push Number',
+                    listener: { "click"() { list.live.push(list.live.length + 1) } }
+                },
+                {
+                    _BUTTON_,
+                    innerText: 'Pop Number',
+                    listener: { "click"() { list.live.pop() } }
+                },
+                {
+                    _BUTTON_,
+                    innerText: 'Reverse',
+                    listener: { "click"() { list.live.reverse() } }
+                },
+                _NEWLINE_,
+                {
+                    _UL_,
+                    mapChildren:{
+                        array:list,
+                        render:item=>{return { _LI_, innerHTML: item }}
+                    },
+                    style: { display() { return show.live ? "block" : "none"; } }
+                },
+                _CONTINUE_,
+                _NEWLINE_,
+                {
+                    _P_, innerHTML() {
+                        return list.live.length + " element(s)";
+                    }
+                }
+            ]
+        }
+
+        document.body.appendChild(build(dom));
+
+        document.body.appendChild(build({
+            _TB_,
+            children:[
+                "1","2","3",_NEWLINE_,
+                "5",_CONTINUE_,_CONTINUE_,_NEWLINE_,
+                "7","8","9","0"
+            ]
+        }));
+
+    </script>
+</body>
+
+</html>

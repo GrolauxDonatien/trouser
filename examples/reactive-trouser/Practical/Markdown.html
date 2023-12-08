@@ -1,0 +1,67 @@
+<html>
+
+<head>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+        }
+
+        body>* {
+            flex-grow: 1;
+        }
+    </style>
+    <link href="../../lib/codemirror.css" rel="stylesheet">
+</head>
+
+<body>
+    <script src="../../lib/codemirror.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        // We use two external components, that are regular JavaScript librairies completely unrelated to trouser.
+        // 1. CodeMirror that provides a code editor
+        // 2. maked that renders markdown to HTML
+
+        // To ensure the dynamicity of the UI, let's use a reactive String that stores the text under edition.
+        // By binding this reactive variable to both libraries, we create a neutral communication medium between them.
+        let edit = live("# hello");
+
+        // We want to capture the reactive textarea for later reference.
+        let ta = live(null);
+
+        const model = {
+            _DIV_,
+            children: [
+                {
+                    _TEXTAREA_,
+                    innerHTML: edit, 
+                    handle: ta
+                }, {
+                    _DIV_,
+                    innerHTML() { // this reactive function parses the reactive variable using marked.
+                        return marked.parse(edit.live);
+                    }
+                }]
+        }
+
+        document.body.appendChild(build(model));
+
+        // CodeMirror requires that the element is in the DOM of page, which is now the case
+        // trouser does not manage this directly as it would require using a MutationObserver on the whole DOM, yielding poor performances.
+        let editor = CodeMirror.fromTextArea(ta.live, {
+            model: "markdown",
+            lineNumbers: true
+        })
+
+        // Let's bind the reactive edit variable to CodeMirror
+        editor.on('change', () => {
+            edit.live = editor.getDoc().getValue();
+        });
+
+    </script>
+</body>
+
+</html>
