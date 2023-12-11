@@ -2,27 +2,19 @@
 
 <head>
     <style>
-        .cell,
         .cell input {
-            height: 1.5em;
             line-height: 1.5;
             font-size: 15px;
-            position: relative;
-        }
-
-        .cell span {
-            padding: 0 6px;
-        }
-
-        .cell input {
             width: 100%;
             height: 100%;
             box-sizing: border-box;
-            position: absolute;
+            position: relative;
             top: 0px;
             left: 0px;
             right: 0px;
             bottom: 0px;
+            padding: 0px;
+            border: none;
         }
 
         .cell.right {
@@ -52,46 +44,35 @@
         }
 
         td {
-            border: 1px solid #ccc;
+            border: none;
             height: 1.5em;
             overflow: hidden;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
 
 <body>
-    <table></table>
     <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
     <script src="../../iframe.js"></script>
     <script src="../../lib/jsep.js"></script>
     <script>
         // Small spreadsheet with basic formula support
-        // The design is to have a 2D array (called data) containing the live value of each cell
-        // And for each cell, a live function computes its innerText, applying formulas when needed
-        // Formulas are parsed by jsep, and references (A1) are translated to their corresponding live value in data
-        // Because of the live nature of the update of the innerText and the dependency on the live values,
-        // Updating a cell propagates automatically to all formulas depending on that cell!
 
         // Configuration of the table
-        const table = document.getElementsByTagName("table")[0];
         const cols = 30;
         const lines = 30;
-        // data retains the values in the table. data itself is not live, but its contained values will be.
-        // display is the computed value to be displayed, or the exception to be displayed.
-        let data = [];
-        let display = [];
+        const data = []; // we'll use this to store the internal states of the cell
+        const display = []; // we'll use this to store the computed, displayed value of the cell
 
         // Utility functions
-        const colToLetters = (n) => (a = Math.floor(n / 26)) >= 0 ? colToLetters(a - 1) + String.fromCharCode(65 + (n % 26)) : '';
-
         function refToCell(r) { // Grabs the cell from data based on a literal reference
             let split = r.toLocaleUpperCase().match(/[A-Z]+|[0-9]+/g);
             if (split.length != 2) throw new Error("Invalid cell " + r);
             let line = parseInt(split[1]) - 1;
             let col = split[0].split('').reduce((r, a) => r * 26 + parseInt(a, 36) - 9, 0) - 1;
             if (isNaN(line) || isNaN(col) || line < 0 || line >= lines || col < 0 || col >= cols) throw new Error("Cell outside of bounds " + r);
-            // we want the live innerHTML of this cell, not its value: if this cell contains a formula, its live innerHTML contains its live computed value
-            if (!display[line][col]) getCell(line,col);
             return display[line][col].live();
         }
 
@@ -100,16 +81,12 @@
             switch (ast.type) {
                 case "BinaryExpression":
                     switch (ast.operator) {
-                        case "+":
-                            return interpret(ast.left) + interpret(ast.right);
-                        case "-":
-                            return interpret(ast.left) - interpret(ast.right);
-                        case "*":
-                            return interpret(ast.left) * interpret(ast.right);
-                        case "/":
-                            return interpret(ast.left) / interpret(ast.right);
+                        case "+": return interpret(ast.left) + interpret(ast.right);
+                        case "-": return interpret(ast.left) - interpret(ast.right);
+                        case "*": return interpret(ast.left) * interpret(ast.right);
+                        case "/": return interpret(ast.left) / interpret(ast.right);
                     }
-                    break;
+                    throw new Error("Invalid operator " + ast.operator);
                 case "Identifier":
                     return refToCell(ast.name);
                 case "Literal":
@@ -119,113 +96,105 @@
             }
         }
 
-        // sets up the HTML according to lines and cols, also filling the live values in data
-        let html = ["<thead><tr><th></th>"];
-        let hline = [];
-        for (let c = 0; c < cols; c++) {
-            html.push(`<th>${colToLetters(c)}</th>`);
-            hline.push('<td class="cell"></td>');
-        }
-        html.push("</tr></thead><tbody>");
-        hline = hline.join("");
+        const colToLetters = (n) => (a = Math.floor(n / 26)) >= 0 ? colToLetters(a - 1) + String.fromCharCode(65 + (n % 26)) : '';
+
+        const tbody = []; // part of the model that needs to be filled in down below
+        const model = {
+            _TABLE_,
+            children: [
+                {
+                    _THEAD_, child: {
+                        _TR_,
+                        children: Array.from({ length: cols + 1 }, (_, c) => { return { _TH_, innerText: c == 0 ? "" : colToLetters(c - 1) } })
+                    }
+                },
+                {
+                    _TBODY_,
+                    children: tbody
+                },
+            ]
+        };
+
         for (let l = 0; l < lines; l++) {
+            const tr = [{ _TH_, innerText: l + 1 }]; // model for the whole line
             data.push([]);
             display.push([]);
-            html.push(`<tr><th>${l + 1}</th>${hline}</tr>`);
-        }
-        table.innerHTML = html.join('\n');
-
-        // We create the live cells lazily has requested
-        function getCell(l,c) {
-            let value=data[l][c];
-            if (value===undefined) {
-                value=live(null);
-                data[l][c]=value;
-                let td = table.children[1].children[l].children[c + 1];
-                let cell = live(td);
+            for (let c = 0; c < cols; c++) {
+                data[l].push(live(null));
+                display[l].push(live(null));
                 display[l][c] = live(() => {
-                    if (value.live == null) {
-                        return "";
-                    } else if (!isNaN(parseFloat(value.live))) {
-                        return value.live;
-                    } else if (!value.live.startsWith('=')) {
-                        return value.live;
+                    if (data[l][c].live == null) { return "";
+                    } else if (!data[l][c].live.startsWith('=')) { return data[l][c].live;
                     } else {
-                        // jsep can throw parse errors
-                        // interpret can throw syntax errors
-                        // further, value can be part of a circular reference, and JavaScriptLive will detect and also inject an error
-                        // In conclusion, display can throw errors. This explains why we need to try/catch in the functions below.
-                        return interpret(jsep(value.live.substring(1)));
+                        // errors can be thrown by jsep (parse error), interpret (invalid cell reference, operator, syntax error), or even trouser (circular references)
+                        return interpret(jsep(data[l][c].live.substring(1)));
                     }
                 });
-                cell.innerText = live(()=>{
-                    try { 
-                        return display[l][c].live();
-                    } catch (e) { 
-                        return e.message; 
+                const editing = live(false);
+                tr.push({
+                    _TD_, class: "cell",
+                    child: {
+                        _INPUT_, // each cell contains a single input
+                        value() {
+                            // the input's value is either the raw data in editing mode, or the computed (display) value
+                            if (editing.live) {
+                                return data[l][c].live || "";
+                            } else {
+                                try {
+                                    return display[l][c].live(); // display value may trigger an error
+                                } catch (e) {
+                                    return e.message; // display the error message in case of error
+                                }
+                            }
+                        },
+                        listener: {
+                            focus(event, handle) {
+                                editing.live = true; // when focus is received, turn the editing mode on
+                            },
+                            blur(event, handle) { // when focus is lost, save the edited valye
+                                if (parseFloat(handle.value.live) + "" == handle.value.live) {
+                                    data[l][c].live = parseFloat(handle.value.live); // store raw float data
+                                } else {
+                                    data[l][c].live = handle.value.live; // store string data
+                                }
+                                editing.live = false; // turn off editing mode
+                            },
+                            keyup(event, handle) {
+                                if (event.keyCode == 13) {
+                                    handle.live.blur(); // enter key = blur the cell to save data
+                                } else if (event.keyCode == 27) {
+                                    handle.value.live = data[l][c].live || ""; // esc key restores old data
+                                    handle.live.blur(); // blurs the cell, saving the restored old data
+                                }
+                            }
+                        },
+                        style: {
+                            textAlign() {
+                                if (editing.live) return "left"; // always align left when editing data
+                                try {
+                                    return typeof display[l][c].live() == "number" ? "right" : "left"; // always numbers right, otherwiase left
+                                } catch (_) {
+                                    return "left"; // in case of error, align left
+                                }
+                            },
+                            color() {
+                                if (editing.live) return "black"; // always edit in black
+                                try {
+                                    display[l][c].live(); // would trigger an error if the cell has one
+                                    return "black"; // no error = black
+                                } catch (_) {
+                                    return "red"; // error = red
+                                };
+                            }
+                        }
                     }
-                });
-                cell.style.textAlign = live(() => {
-                    try {
-                        return typeof display[l][c].live() == "number" ? "right" : "left";
-                    } catch (_) {
-                        return "left";
-                    }
-                });
-                cell.style.color=live(()=>{
-                    try { 
-                        display[l][c].live(); 
-                        return "black";
-                    } catch (_) {
-                        return "red";
-                    };
                 })
             }
-            return value;
+            tbody.push({ _TR_, children: tr });
         }
 
-        // Management of the edition of cells
-        let input = null;
-        table.children[1].addEventListener("click", (event) => {
-            let td = event.target;
-            if (!td.classList.contains("cell")) return;
-            let col = Array.prototype.indexOf.call(td.parentElement.children, td) - 1;
-            let line = Array.prototype.indexOf.call(td.parentElement.parentElement.children, td.parentElement);
-            if (input != null) input.dispatchEvent(new Event("change"));
-            input = document.createElement("input");
-            let cell=getCell(line,col);
-            input.value = cell.live;
-            td.appendChild(input);
-            input.focus();
-            function confirm() {
-                input.removeEventListener("blur", confirm);
-                input.parentElement.removeChild(input);
-                if (parseFloat(input.value) + "" == input.value) {
-                    cell.live = parseFloat(input.value);
-                } else {
-                    cell.live = input.value;
-                }
-                input = null;
-            }
-            input.addEventListener("blur", confirm);
-            input.addEventListener("keyup", (event) => {
-                if (event.keyCode == 13) confirm();
-                if (event.keyCode == 27) {
-                    input.removeEventListener("blur", confirm);
-                    input.parentElement.removeChild(input);
-                    input = null;
-                }
-            });
-        });
+        document.body.append(build(model));
 
-        // Warning: in this example, it is easy to introduce live circular references, just put =A1+1 in A1 for example.
-        // The problem with circular references is that they should result in infinite calls in the live propagation.
-        // The propagator can detect this situation, and use a simulated exception to break from the loop.
-        // However, this breaks the real propagation normally happening. 
-        // In the example here, innerText, style.textAlign and style.color needs to be propagated to in order to display the message in red.
-        // As there is no beginning or ending to circular references, the system cannot properly guess that these functions should still be executed.
-        // Efforts are made to have a bit of propagation around setting live DOM properties, which is why this example works anyway.
-        // But, in general, avoid circular references as much as possible.
     </script>
 </body>
 

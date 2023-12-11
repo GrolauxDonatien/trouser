@@ -935,7 +935,7 @@ function liveDom(el, live) {
         // where prefix is the querySelectorAll filter, or internal for serializeObject
 
         function getDomProp(prop, event, prefix) {
-//            if (prop=="value") debugger;
+            //            if (prop=="value") debugger;
             function setter(value) {
                 if (prefix) {
                     el[prefix][prop] = value;
@@ -973,10 +973,18 @@ function liveDom(el, live) {
                     }
                     if (Array.isArray(event)) {
                         for (let i = 0; i < event.length; i++) {
-                            el.addEventListener(event[i], callback);
+                            if (event[i]=="resize") {
+                                window.addEventListener(event[i], callback);
+                            } else {
+                                el.addEventListener(event[i], callback);
+                            }
                         }
                     } else {
-                        el.addEventListener(event, callback);
+                        if (event=="resize") {
+                            window.addEventListener(event, callback);
+                        } else {
+                            el.addEventListener(event, callback);
+                        }
                     }
                     obj.events[propname] = {
                         el: new WeakRef(el),
@@ -1049,11 +1057,11 @@ function liveDom(el, live) {
                     if (typeof value.live == "function") {
                         obj.state.live = value.live();
                     } else {
-                        createLive(()=>{
-                            domprop.live=value.live;
+                        createLive(() => {
+                            domprop.live = value.live;
                         });
-                        createLive(()=>{
-                            value.live=domprop.live;
+                        createLive(() => {
+                            value.live = domprop.live;
                         });
 
 
@@ -1111,7 +1119,7 @@ function liveDom(el, live) {
                                 try {
                                     el.setAttribute(attr, value);
                                 } catch (e) {
-                                    throw new Error("Error when setting attribute "+attr, {cause:e});
+                                    throw new Error("Error when setting attribute " + attr, { cause: e });
                                 }
                                 return { type: "attribute", old, "new": value };
                             } else {
@@ -1163,7 +1171,7 @@ function liveDom(el, live) {
                 }
                 domattr[internal].notify();
             } else {
-                throw new ReferenceError("Can only setAttribute('" + attribute + "',...) of a lifted DOM element to another lifted value.");
+                throw new ReferenceError("Can only setAttribute('" + attr + "',...) of a lifted DOM element to another lifted value.");
             }
         }
 
@@ -1577,6 +1585,9 @@ function liveDom(el, live) {
                 case "inert":
                 case "selected":
                     return getDomProp(prop, "change");
+                case "width":
+                case "height":
+                    return getDomProp(prop, "resize");
                 case "disabled":
                 case "readOnly":
                 case "title":
@@ -1654,23 +1665,26 @@ function liveDom(el, live) {
                     return liveSerializeObject(el);
                 // childNodes cannot rely on liveSelectorAll because of text nodes => custom solution instead
                 default:
-                    throw new ReferenceError("Cannot change " + prop + " on this object.");
+                    throw new ReferenceError("Cannot get " + prop + " on this object.");
             }
         }
         obj.delegate.set = (target, prop, value) => {
             switch (prop) {
                 case "value":
-                    return setDomProp(prop, value, ["keyup","input"]);
+                    return setDomProp(prop, value, ["keyup", "input"]);
                 case "innerHTML":
                 case "innerText":
                     return setDomProp(prop, value, "focusout");
                 case "checked":
+                case "inert":
+                case "selected":
                     return setDomProp(prop, value, "change");
+                case "width":
+                case "height":
+                    return setDomProp(prop, value, "resize");
                 case "disabled":
                 case "readOnly":
                 case "title":
-                case "inert":
-                case "selected":
                     return setDomProp(prop, value);
                 case "style":
                     throw new Error("Cannot overwrite " + value);
@@ -1935,10 +1949,9 @@ function notifyChange(live, details) {
             }
         }
     } catch (e) {
-        // Verrrryyyy bad !
-        console.error("FATAL: internal error was leaked during propagation!");
+        console.error(new Error("Internal error was thrown during propagation"));
         console.error(e);
-        debugger;
+        // do not throw the error, that would further break the propagation mechanism.
     } finally {
         triggering = false;
         recvDetails = null;
