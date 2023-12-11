@@ -99,7 +99,7 @@ class Live extends ExtendableProxyWithDelegate {
                         return internalObject;
                     case Symbol.toPrimitive:
                         return function (hint) {
-                            throw new ReferenceError(`Live entities cannot be coerced into ${hint}.`);
+                            throw new ReferenceError(`Live entities cannot be coerced into ${hint}. Did you forget to use .live ?`);
                         }
                     case "toJSON":
                         if ("toJSON" in internalObject.delegate) {
@@ -1078,7 +1078,7 @@ function liveDom(el, live) {
                 liveattr[internal].delegate.set = (target, attr, value) => {
                     if (attr == 'live') {
                         if (!isEmptyObject(liveattr[internal].pull)) { // this attr has been linked to something live, directly changing the value makes no sense => throw an exception
-                            throw new ReferenceError("Cannot change live value of a attrerty that is currently linked to a live entity");
+                            throw new ReferenceError("Cannot change live value of an attribute that is currently linked to a live entity");
                         } else {
                             let ret = oset(target, attr, value);
                             el.setAttribute(attr, value);
@@ -1108,7 +1108,11 @@ function liveDom(el, live) {
                                     return { type: "attribute", old, error: e };
                                 }
                                 liveattr[internal].state.live = value;
-                                el.setAttribute(attr, value);
+                                try {
+                                    el.setAttribute(attr, value);
+                                } catch (e) {
+                                    throw new Error("Error when setting attribute "+attr, {cause:e});
+                                }
                                 return { type: "attribute", old, "new": value };
                             } else {
                                 delete liveattr[internal].pull[uid];

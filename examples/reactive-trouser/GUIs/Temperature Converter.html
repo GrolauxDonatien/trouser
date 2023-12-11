@@ -6,6 +6,8 @@
     <script src="../../iframe.js"></script>
     <script>
 
+        // We will need to reference the celsius and farheneit inputs.
+        // We do so by using reactive variables that need to be declared first.
         const celsius = live(null);
         const fahrenheit = live(null);
 
@@ -15,8 +17,11 @@
                 {
                     _INPUT_,
                     type: "number",
-                    handle: celsius,
+                    handle: celsius, // binds the reactive DOM element to this reactive variable
                     value() {
+                        // this attribute is declared as a function. trouser will bind the reactive attribute
+                        // to the reactive version of this function. Whenever a reactive dependency of this function
+                        // changes, the reactive function is computed again, and the reactive attribute is updated.
                         if (fahrenheit.live!=null && fahrenheit.value.live != "")
                             return (parseFloat(fahrenheit.value.live) - 32) * (5 / 9)
                     }
@@ -25,8 +30,13 @@
                 {
                     _INPUT_,
                     type: "number",
-                    handle: fahrenheit,
+                    handle: fahrenheit, // binds the reactive DOM element to this reactive variable
                     value() {
+                        // This is the counterpart to the function above. Beware of loops: this function updates
+                        // the reactive value of fahrenheit, triggering the other reactive function which updates
+                        // the reactive value of celsius, once again triggering this reactive function.
+                        // However, the reactive system only triggers when a value really changes, which is eventually
+                        // not the case anymore when both temperatures are in sync.
                         if (celsius.live!=null && celsius.value.live != "")
                             return (parseFloat(celsius.value.live) * (9 / 5) + 32);
                     }

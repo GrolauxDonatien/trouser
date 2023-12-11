@@ -10,41 +10,76 @@
 </head>
 
 <body>
-
-    <div><label>Elapsed Time: <progress id="progress" min="0"></progress></label>
-        <div id="time1">15.0s</div>
-        <div> Duration: <input type="range" min="1" max="30000" id="duration"> <span id="time2"></span> </div>
-        <button onclick="reset()">Reset</button>
-    </div>
     <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
     <script src="../../iframe.js"></script>
     <script>
-        let time = live(0);
-        let progress = live(document.getElementById("progress"));
-        let duration = live(document.getElementById("duration"));
-        let time1 = live(document.getElementById("time1"));
-        let time2 = live(document.getElementById("time2"));
+        // the reactive duration variable will be bound to the value of the input range
+        // as an HTML attribute, it is a String even if it stores a number
+        const duration = live('1000'); 
 
+        // The timer updates the time reactive variable by using an interval.
+        const time = live(0);
         let tout = null;
-
         function reset() {
             if (tout) clearInterval(tout);
             time.live = 0;
             tout = setInterval(() => {
-                if (time.live < parseFloat(duration.value.live)) {
+                if (time.live < parseFloat(duration.live)) {
                     time.live += 10;
                 }
             }, 10);
         }
 
-        // The second argument of setAttribute for a live DOM element is a live object too
-        progress.setAttribute("max", duration.value);
-        progress.setAttribute("value", time);
+        const model = {
+            _DIV_,
+            children: [
+                {
+                    _LABEL_,
+                    children: ['Elapsed TIme: ',
+                        {
+                            _PROGRESS_,
+                            min: "0",
+                            max: duration,
+                            value: time
+                        }
+                    ]
+                },
+                {
+                    _DIV_,
+                    innerText() { return `${Math.floor(time.live / 100) / 10} s` }
+                },
+                {
+                    _DIV_,
+                    children: [
+                        " Duration: ",
+                        {
+                            _INPUT_,
+                            type: "range",
+                            min: "1",
+                            max: "30000",
+                            value: duration
+                        }, ' ',
+                        {
+                            _SPAN_,
+                            innerText() { return `${Math.floor(parseInt(duration.live) / 100) / 10} s` }
+                        }
+                    ]
+                },
+                {
+                    _BUTTON_,
+                    innerText:"Reset",
+                    listener: {
+                        click: reset
+                    }
+                }
+            ]
+        }
 
-        time1.innerHTML = live(() => `${Math.floor(time.live / 100) / 10} s`);
-        time2.innerHTML = live(() => `${Math.floor(parseInt(duration.value.live) / 100) / 10} s`);
+        document.body.append(build(model));
 
         reset();
+
     </script>
 </body>
 

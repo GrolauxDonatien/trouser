@@ -37,7 +37,7 @@
     <script>
         let data = live(["A", "B", "C", "D", "E", "F"].map((l) => { return { label: l, value: live(100) } }));
 
-        const form = live(null);
+        const form = live(null); // to get a reference to the form DOM live element
         const model = {
             _DIV_,
             children: [{

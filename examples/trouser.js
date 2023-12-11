@@ -231,8 +231,8 @@ const build = (() => {
                     if (isLive(children)) {
                         lel.mapChildren(children, c => build.innerBuild(getState(c), context));
                     } else if (typeof children == "function") {
-                        let array=live([]);
-                        live(()=>array.live=children());
+                        let array = live([]);
+                        live(() => array.live = children());
                         lel.mapChildren(array, c => build.innerBuild(getState(c), context));
                     } else {
                         let alive = false;
@@ -272,7 +272,12 @@ const build = (() => {
                     } else if (isLive(what[prop])) {
                         lel[prop] = what[prop];
                     } else {
-                        el[prop] = what[prop];
+                        // el[prop]=what[prop] results in problems
+                        // if the live version of el[prop] is used down the line.
+                        // Indeed, this reactive system does not listen to DOM mutations,
+                        // and if the live variable already exists, it is now out of sync with the element property
+                        // By staying at the reactive level, we avoid this issue.
+                        lel[prop] = live(what[prop]);
                     }
                     break;
                 case "style":
@@ -286,7 +291,7 @@ const build = (() => {
                             if (isLive(v)) {
                                 lel.style[s] = v;
                             } else {
-                                el.style[s] = v;
+                                lel.style[s] = live(v);
                             }
                         }
                     }
@@ -300,7 +305,7 @@ const build = (() => {
                     if (isLive(v)) {
                         lel.setAttribute(prop, v);
                     } else {
-                        el.setAttribute(prop, v);
+                        lel.setAttribute(prop, live(v));
                     }
             }
         }
@@ -424,8 +429,8 @@ const build = (() => {
                         build._context_ = { mode: "direct", atEnd: build._context_.atEnd };
                         lel.mapChildren(children, c => build.innerBuild(c, build._context_));
                     } else if (typeof children == "function") {
-                        let array=live([]);
-                        live(()=>array.live=children());
+                        let array = live([]);
+                        live(() => array.live = children());
                         build._context_ = { mode: "direct", atEnd: build._context_.atEnd };
                         lel.mapChildren(array, c => build.innerBuild(getState(c), build._context_));
                     } else {
@@ -472,7 +477,7 @@ const build = (() => {
                     } else if (isLive(what[prop])) {
                         lel[prop] = what[prop];
                     } else {
-                        el[prop] = what[prop];
+                        lel[prop] = live(what[prop]);
                     }
                     break;
                 case "style":
@@ -486,7 +491,7 @@ const build = (() => {
                             if (isLive(v)) {
                                 lel.style[s] = v;
                             } else {
-                                el.style[s] = v;
+                                lel.style[s] = live(v);
                             }
                         }
                     }
@@ -500,7 +505,7 @@ const build = (() => {
                     if (isLive(v)) {
                         lel.setAttribute(prop, v);
                     } else {
-                        el.setAttribute(prop, v);
+                        lel.setAttribute(prop, live(v));
                     }
             }
         }

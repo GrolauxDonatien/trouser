@@ -26,51 +26,71 @@
 </head>
 
 <body>
-    <select id="flight">
-        <option value="0">One-way Flight</option>
-        <option value="1">Return Flight</option>
-    </select><input type="date" id="start"><input type="date" id="end">
-    <button onclick="show()">Book</button>
-    <p id="error"></p>
     <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
     <script src="../../iframe.js"></script>
     <script>
-        // Three live variables to capture the state of the interface
-        let flight = live(document.getElementById("flight"));
-        let start = live(document.getElementById("start"));
-        let end = live(document.getElementById("end"));
-
         const now = new Date().toISOString().split('T')[0];
-
-        // In the next line, we first take the DOM element associated to its live version, and then the value property on the DOM element
-        start.live.value = now;
-        // In the next line, we first take the live value property of the live DOM element, and then its current value by using .live
-        end.value.live = now;
-        // Both versions above end up performing the same task, however there are differences:
-        // 1. Inside a live function, start.live.value creates a dependency on the start live variable, and not on its value,
-        // while end.value.live creates a dependency on the value property, and not on end. As the dependency defines when the function
-        // is called again, most of the time it is end.value.live that is the correct form.
-        // 2. end.value may be bound to a live function. In that case, end.value.live=now will trigger an Exception: 
-        // there is a potential conflict between the live function and the value being set. The other form, start.live.value will
-        // always succeed, resulting in a displayed value different from the function result, till it is evaluated again.
 
         const format = (d) => new Date(d).toLocaleDateString();
 
-        function show() {
-            alert(
-                flight.value.live == "1"
-                    ? `You have booked a return flight leaving on ${format(start.value.live)} and returning on ${end.value.live}.`
-                    : `You have booked a one-way flight leaving on ${format(start.value.live)}.`
-            )
+        // We need live variables to reference the live DOM elements after they are built.
+        let flight = live(null);
+        let start = live(null);
+        let end = live(null);
+        let button = live(null);
+
+        const model = {
+            _DIV_,
+            children: [
+                {
+                    _SELECT_,
+                    handle: flight, // handle binds the live DOM element to this live variable, for further reference
+                    children: [
+                        { _OPTION_, value: "0", innerText: "One-way Flight" },
+                        { _OPTION_, value: "1", innerText: "Return Flight" }
+                    ]
+                },
+                { _INPUT_, type: "date", handle: start, value: now },
+                {
+                    _INPUT_, type: "date", handle: end, value: now,
+                    // this property is declared as a function. trouser will bind the reactive property
+                    // to the reactive version of this function. Whenever a reactive dependency of this function
+                    // changes, the reactive function is computed again, and the reactive property is updated.
+                    disabled() {
+                        return flight.value.live == '0';
+                    }
+                },
+                {
+                    _BUTTON_,
+                    listener: {
+                        click() {
+                            alert(
+                                flight.value.live == '1'
+                                    ? `You have booked a return flight leaving on ${format(start.value.live)} and returning on ${end.value.live}.`
+                                    : `You have booked a one-way flight leaving on ${format(start.value.live)}.`
+                            )
+                        }
+                    },
+                    innerText: "Book",
+                    handle: button,
+                    disabled() {
+                        return flight.value.live != '0' && start.value.live >= end.value.live;
+                    }
+                },
+                {
+                    _P_, 
+                    innerText() {
+                        // instead of writing the same condition as above, we just reference the button disabled live property directly
+                        return button.disabled.live ? "Return date must be after departure date." : ""
+                    }
+                }
+            ]
         }
 
-        end.disabled = live(() => flight.value.live == "0");
+        document.body.append(build(model));
 
-        let button=document.getElementsByTagName("button")[0];
-        live(button).disabled = live(() => flight.value.live != "0" && start.value.live >= end.value.live);
-
-        live(document.getElementById("error")).innerHTML = live(() => live(button).disabled.live?"Return date must be after departure date.":"");
-
+        live(() => { console.log(flight.value.live) })
     </script>
 </body>
 

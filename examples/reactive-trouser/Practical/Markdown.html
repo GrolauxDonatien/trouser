@@ -24,8 +24,7 @@
         // We use two external components, that are regular JavaScript librairies completely unrelated to trouser.
         // 1. CodeMirror that provides a code editor
         // 2. maked that renders markdown to HTML
-
-        // To ensure the dynamicity of the UI, let's use a reactive String that stores the text under edition.
+        // To ensure the dynamicity of the UI, we use a reactive String that stores the text under edition.
         // By binding this reactive variable to both libraries, we create a neutral communication medium between them.
         let edit = live("# hello");
 
@@ -50,7 +49,7 @@
         document.body.appendChild(build(model));
 
         // CodeMirror requires that the element is in the DOM of page, which is now the case
-        // trouser does not manage this directly as it would require using a MutationObserver on the whole DOM, yielding poor performances.
+        // trouser does not manage this directly as it would require using MutationObserver on the whole DOM, yielding poor performances.
         let editor = CodeMirror.fromTextArea(ta.live, {
             model: "markdown",
             lineNumbers: true
