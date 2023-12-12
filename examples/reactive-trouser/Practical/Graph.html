@@ -37,7 +37,7 @@
     <script>
         let data = live(["A", "B", "C", "D", "E", "F"].map((l) => { return { label: l, value: live(100) } }));
 
-        const form = live(null); // will be bound to get a reference to the form DOM live element
+        const stat = live(""); // will be to the value of the input used when adding a stat
         const model = {
             _DIV_,
             children: [{
@@ -95,19 +95,16 @@
                 }
             }, {
                 _FORM_,
-                handle: form, // handle binds the live variable to the live DOM element
                 children: [{
-                    _INPUT_, name: "newlabel"
+                    _INPUT_, name: "newlabel", value:stat
                 }, {
                     _BUTTON_, innerText: "Add a Stat",
                     listener: {
                         click(event) {
-                            // form.serializeObject is a convenience live object
-                            // mapping the names of form elements to their values
                             data.live.push({
-                                label: form.serializeObject.newlabel, value: live(100)
+                                label: stat.live, value: live(100)
                             });
-                            form.serializeObject.newlabel = "";
+                            stat.live = "";
                             event.preventDefault();
                         }
                     }

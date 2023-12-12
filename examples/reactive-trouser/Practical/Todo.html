@@ -400,31 +400,8 @@
 </head>
 
 <body>
-
-    <body>
-        <div id="app" data-v-app="">
-            <section class="todoapp">
-                <header class="header">
-                    <h1>todos</h1><input id="new-todo" class="new-todo" autofocus=""
-                        placeholder="What needs to be done?">
-                </header>
-                <section class="main"><input id="toggle-all" class="toggle-all" type="checkbox"><label
-                        for="toggle-all">Mark all as complete</label>
-                    <ul class="todo-list" id="todo-list">
-
-                    </ul>
-                </section>
-                <footer class="footer"><span class="todo-count"><strong id="counter">1</strong><span> item(s) left</span></span>
-                    <ul class="filters">
-                        <li><a id="all" class="selected">All</a></li>
-                        <li><a id="active" class="">Active</a></li>
-                        <li><a id="completed" class="">Completed</a></li>
-                    </ul><button class="clear-completed" style="display: none;"> Clear completed </button>
-                </footer>
-            </section>
-        </div>
-    </body>
     <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
     <script src="../../iframe.js"></script>
     <script>
         // With live entities, working with components can be reduced to using live variables.
@@ -437,28 +414,8 @@
         // In this example, we use two live variables: one for the active filter, one for the todo list.
         let todos = live([]);
         let filter = live(0);
-
-        // Set up filters button, so that they change the filter live variable.
-        let filters = [document.getElementById("all"), document.getElementById("active"), document.getElementById("completed")];
-        for (let i = 0; i < filters.length; i++) {
-            filters[i].addEventListener('click', () => {
-                filters[filter.live].classList.remove("selected");
-                filters[i].classList.add("selected");
-                filter.live = i;
-            });
-        }
-
-        // The todo input adds an element to the live todos array when the Enter key is pressed.
-        let newTodo = document.getElementById("new-todo");
-        newTodo.addEventListener('keydown', (event) => {
-            if (event.key == "Enter") {
-                todos.live.push({ active: true, text: newTodo.value });
-                newTodo.value = "";
-            }
-        });
-
-        // For mapChildren, we need another live array derived from the live todos array and applying the current filter.
         let viewList = live([]);
+        // For mapChildren, we need another live array derived from the live todos array and applying the current filter.
         live(() => {
             switch (filter.live) {
                 case 0:
@@ -475,54 +432,146 @@
             }
         })
 
-        // Now we can map the derived live array to DOM elements
-        live(document.getElementById("todo-list")).mapChildren(viewList,
-            (item) => `
-            <li class="todo${item.active ? "" : " completed"}">
-                 <div class="view"><input class="toggle" type="checkbox"${item.active ? "" : " checked"}><label>${item.text}</label><button class="destroy"></button></div>
-            </li>`,
-            (item, el) => {
-                // This third parameter allows setting up the newly inserted DOM element.
-                // First, manage the checkbox.
-                el.querySelector("input").addEventListener("change", () => {
-                    if (el.querySelector("input").checked) {
-//                        el.classList.add("completed");
-                        // todos is a live array of bare objects, not live objects.
-                        // To ensure the propagation of the update, we need to update the live array itself
-                        let idx = todos.live.indexOf(item);
-                        todos.live[idx] = { active: false, text: todos.live[idx].text };
-                    } else {
-//                        el.classList.remove("completed");
-//                        el.classList.add("completed");
-                        let idx = todos.live.indexOf(item);
-                        todos.live[idx] = { active: true, text: todos.live[idx].text };
-                    }
-                });
-                // Second, manage the delete button.
-                el.querySelector("button").addEventListener("click", () => {
-                    todos.live.splice(todos.live.indexOf(item), 1);
-                });
-            });
+        const model = {
+            _DIV_,
+            child: {
+                _SECTION_,
+                class: "todoapp",
+                children: [{
+                    _HEADER_,
+                    class: "header",
+                    children: [{
+                        _H1_,
+                        innerText: "todos"
+                    }, {
+                        _INPUT_,
+                        class: "new-todo",
+                        autofocus: "",
+                        placeholder: "What needs to be done?",
+                        listener: {
+                            keydown(event, handle) {
+                                if (event.key == "Enter") {
+                                    todos.live.push({ active: true, text: handle.value.live });
+                                    handle.value.live = "";
+                                }
+                            }
+                        }
+                    }]
+                }, {
+                    _SECTION_,
+                    class: "main",
+                    children: [{
+                        _INPUT_,
+                        id: "toggle-all",
+                        class: "toggle-all",
+                        type: "checkbox"
+                    }, {
+                        _LABEL_,
+                        for: "toggle-all",
+                        innerText: "Mark all as complete",
+                        listener:{
+                            click() {
+                                for (let i = 0; i < todos.live.length; i++) todos.live[i] = { active: false, text: todos.live[i].text };
+                            }
+                        }
+                    }, {
+                        _UL_,
+                        class: "todo-list",
+                        mapChildren: {
+                            array: viewList,
+                            render(item) {
+                                return {
+                                    _LI_,
+                                    class() { return item.active ? "todo" : " todo completed" },
+                                    child: {
+                                        _DIV_,
+                                        class: "view",
+                                        children: [{
+                                            _INPUT_,
+                                            class: "toggle",
+                                            type: "checkbox",
+                                            checked() { return item.active ? "" : "checked" },
+                                            listener: {
+                                                change(event, handle) {
+                                                    if (handle.checked.live) {
+                                                        // todos is a live array of bare objects, not live objects.
+                                                        // To ensure the propagation of the update, we need to update the live array itself
+                                                        let idx = todos.live.indexOf(item);
+                                                        todos.live[idx] = { active: false, text: todos.live[idx].text };
+                                                    } else {
+                                                        let idx = todos.live.indexOf(item);
+                                                        todos.live[idx] = { active: true, text: todos.live[idx].text };
+                                                    }
+                                                }
+                                            }
+                                        }, {
+                                            _LABEL_,
+                                            innerText: item.text
+                                        }, {
+                                            _BUTTON_,
+                                            class: "destroy",
+                                            listener: {
+                                                click() {
+                                                    todos.live.splice(todos.live.indexOf(item), 1);
+                                                }
+                                            }
+                                        }]
+                                    }
+                                }
+                            }
+                        }
+                    }]
+                }, {
+                    _FOOTER_,
+                    class: "footer",
+                    children: [{
+                        _SPAN_,
+                        class: "todo-count",
+                        children: [
+                            {
+                                _STRONG_,
+                                innerText() {
+                                    let count = 0;
+                                    for (let i = 0; i < todos.live.length; i++) if (todos.live[i].active) count++;
+                                    return count;
+                                }
+                            },
+                            {
+                                _SPAN_,
+                                innerText: " item(s) left"
+                            }
+                        ]
+                    }, {
+                        _UL_,
+                        class: 'filters',
+                        children: ["All", "Active", "Completed"].map((item, i) => {
+                            return {
+                                _LI_,
+                                child: {
+                                    _A_, innerText: item,
+                                    class() { return (i == filter.live) ? "selected" : ""; },
+                                    listener: {
+                                        click() {
+                                            filter.live = i;
+                                        }
+                                    }
+                                }
+                            }
+                        })
+                    }]
+                }]
+            }
+        }
 
-        // Take care of the counter.
-        live(document.getElementById("counter")).innerHTML = live(() => {
-            let count = 0;
-            for (let i = 0; i < todos.live.length; i++) if (todos.live[i].active) count++;
-            return count;
-        });
-
-        // Take care of the toggle-all button.
-        document.querySelector('[for="toggle-all"]').addEventListener('click', () => {
-            for (let i = 0; i < todos.live.length; i++) todos.live[i] = { active: false, text: todos.live[i].text };
-        });
+        document.body.append(build(model));
 
         // Finally, sync with localStorage.
-        const KEY="__todos__";
-        todos.addChangeListener(()=>{
-            localStorage.setItem(KEY,JSON.stringify(todos.live));
+        const KEY = "__todos__";
+        todos.addChangeListener(() => {
+            localStorage.setItem(KEY, JSON.stringify(todos.live));
         });
-        let current=localStorage.getItem(KEY);
-        if (current!=null) todos.live=JSON.parse(current);
+        let current = localStorage.getItem(KEY);
+        if (current != null) todos.live = JSON.parse(current);
     </script>
 </body>
 
