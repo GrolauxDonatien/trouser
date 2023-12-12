@@ -1,0 +1,64 @@
+<html>
+
+<head>
+    <link href="../../lib/bootstrap.min.css" rel="stylesheet">
+    <meta charset="utf-8">
+</head>
+
+<body>
+    <script src="../../lib/bootstrap.bundle.min.js"></script>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script src="../../trouser.bootstrap.js"></script>
+    <script src="../../iframe.js"></script>
+    <script>
+        /* This Boostrap example relies on Bootstrap-specific transformative functions.
+        ** They do the heavy lifting of rendering the detailed HTML for common Bootstrap use cases.
+        ** Furthermore, this example also illustrates a benefit of expressing the UI model in the host programming language.
+        ** The form in the UI is computed on the fly, by mapping the inner data structure to UI elements,
+        ** using a hint system.
+        */
+
+        let data = { // function core data, from the DB for example
+            name: live("Will Smith"),
+            alive: live(true),
+            description: live("Célèbre acteur américain")
+        };
+
+        let hint = { // static hint that helps mapping the data to the UI
+            name: {
+                label: "Name",
+                mandatory: true
+            },
+            alive: {
+                label: "Still alive",
+                type: "checkbox"
+            },
+            description: {
+                label: "Description",
+                _BSTEXTAREA_
+            }
+        }
+
+        let dom = {
+            _BSHTML_,
+            pageTitle: "HomeSweetHome",
+            search(what) { alert("Searching " + what); },
+            menu: {
+                "Main Menu": [{
+                    innerText: "Home",
+                    href: "#"
+                }]
+            },
+            page: {
+                title: "Main Area",
+                child: { _BSFORM_, data, hint }
+            }
+        }
+
+        document.body.append(build(dom));
+
+    </script>
+</body>
+
+</html>

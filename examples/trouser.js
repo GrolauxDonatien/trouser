@@ -356,13 +356,17 @@ const build = (() => {
         out.push('>');
         if ("innerText" in what) {
             let t = getState(what.innerText);
-            out.push(t.replace(/&/g, "&amp;") // manual escape so that there is zero reliance on DOM and this can run in pure node.
+            out.push(t.toString().replace(/&/g, "&amp;") // manual escape so that there is zero reliance on DOM and this can run in pure node.
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#39;"));
         } else if ("innerHTML" in what) {
-            out.push(getState(what.innerHTML));
+            try {
+                out.push(getState(what.innerHTML));
+            } catch (_) {
+                out.push(toString(what.innerHTML));
+            }
         }
         if (!(type.description in { area: true, base: true, br: true, col: true, command: true, embed: true, hr: true, img: true, input: true, keygen: true, link: true, meta: true, param: true, source: true, track: true, wbr: true })) {
             // tag has a closing counterpart (https://www.thoughtco.com/html-singleton-tags-3468620)
@@ -798,7 +802,6 @@ const build = (() => {
         if (Array.isArray(src) && src.length == 1) src = src[0];
         let last = dupe(src);
         toChildren(last);
-        if ((typeof last == "object") && (_BSNAVBARICONS_ in last)) debugger;
         function toChildren(other) {
             if (typeof other == "string") return other;
             if ("child" in other) {
@@ -864,7 +867,6 @@ const build = (() => {
                     for (let i = 0; i < last.children.length; i++) {
                         let from = last.children[i];
                         if (Array.isArray(from) && from.length == 1) from = from[0];
-                        if ((typeof from == "object") && (_BSNAVBARICONS_ in from)) debugger;
                         if (isDual(from)) {
                             debugger; // should not happen
                         }
@@ -888,7 +890,9 @@ const build = (() => {
                     _TEXT_, innerText: '"' + def.replace(/"/g, '\\"') + '"'
                 }
             }
-            let ul = { _UL_, children: [] };
+            let ul = { _UL_, 
+                style:{"listStyleType":"none"},
+                children: [] };
             for (let k in def) {
                 if (k == "0" && def[k] == "T") debugger;
                 if (typeof def[k] == "symbol") {
@@ -930,6 +934,11 @@ const build = (() => {
                         child: {
                             _BUTTON_,
                             "class": "toggleButton text",
+                            style:{
+                                border:"none",
+                                backgroundColor:"#F9F9F9",
+                                textAlign:"left"
+                            },
                             listener: {
                                 click(event) {
                                     let btn = event.currentTarget;
@@ -969,7 +978,10 @@ const build = (() => {
                         _TR_,
                         children: multiple
                     }
-                }, style: { fontFamily: "monospace" }
+                }, style: { 
+                    fontFamily: "monospace",
+                    border:"solid 1px black"
+                }
             }
             let handles = [];
             for (let i = 0; i < trace.length - 1; i++) {
@@ -1007,7 +1019,10 @@ const build = (() => {
                     _TD_,
                     handle,
                     child: renderElement(trace[trace.length - 1]),
-                    style: { display: trace.length == 1 ? "table-cell" : "none" }
+                    style: { 
+                        display: trace.length == 1 ? "table-cell" : "none",
+                        paddingLeft:multiple.length==0?"0px":"20px"
+                    }
                 });
             }
             return out;

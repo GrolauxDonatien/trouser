@@ -124,7 +124,7 @@
                 display[l].push(live(null));
                 display[l][c] = live(() => {
                     if (data[l][c].live == null) { return "";
-                    } else if (!data[l][c].live.startsWith('=')) { return data[l][c].live;
+                    } else if (!data[l][c].live.toString().startsWith('=')) { return data[l][c].live;
                     } else {
                         // errors can be thrown by jsep (parse error), interpret (invalid cell reference, operator, syntax error), or even trouser (circular references)
                         return interpret(jsep(data[l][c].live.substring(1)));

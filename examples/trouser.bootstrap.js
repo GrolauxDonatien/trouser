@@ -12,6 +12,7 @@ const _BSSIDEBAR_ = Symbol('bssidebar');
 const _BSMENU_ = Symbol('bsmenu');
 const _BSPAGE_ = Symbol('bspage');
 const _BSHTML_ = Symbol('bshtml');
+const _BSFORM_ = Symbol('bsform');
 
 build.builders._BSARTICLE_ = (what) => {
     delete what._BSARTICLE_;
@@ -494,4 +495,32 @@ build.builders._BSHTML_ = (what) => {
         content.push(what.page);
     }
     return build.build(out, _DIV_);
+}
+
+build.builders._BSFORM_ = ({data,hint}) => {
+    let out={
+        children:[]
+    }
+    for (let k in data) {
+        let component = Object.assign({}, hint[k]);
+        if (build.getTypeKey(component) == null) {
+            component._BSINPUT_ = _BSINPUT_; // set a default type to component
+        }
+        if (component.type == "checkbox") {
+            component.checked = data[k];
+        } else {
+            component.value = data[k];
+        }
+        if (component.mandatory === true) {
+            delete component.mandatory;
+            component.error = (v) => {
+                if (v.value.live == "") return { invalid: "Field is mandatory" };
+                return { valid: "" };
+            };
+            component.errorTrigger = 'change';
+        }
+        out.children.push(component);
+    }
+
+    return build.build(out, _FORM_);
 }
