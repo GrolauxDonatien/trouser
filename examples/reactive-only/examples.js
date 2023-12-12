@@ -26,6 +26,11 @@ function runExamples(list) {
         }
     );
 
+    live(document.getElementById("ref")).innerHTML=live(()=>{
+        if (example.live==null) return "HTML";
+        return `HTML <a style="font-size:14px" href="${example.live}.html" target="_blank">${example.live}</a>`;
+    });
+
     let code = document.getElementById("code");
     let html = document.getElementById("html");
     let preview = document.getElementById("preview");
@@ -77,16 +82,18 @@ function runExamples(list) {
             readOnly: true
         });
         editor.save()
-        html.innerHTML = '';
-        textarea = document.createElement("textarea");
-        textarea.value = format(event.data.body);
-        html.appendChild(textarea);
-        editor = CodeMirror.fromTextArea(textarea, {
-            mode: "javascript",
-            lineNumbers: true,
-            readOnly: true
-        });
-        editor.save()
+        if (html!=null) {
+            html.innerHTML = '';
+            textarea = document.createElement("textarea");
+            textarea.value = format(event.data.body);
+            html.appendChild(textarea);
+            editor = CodeMirror.fromTextArea(textarea, {
+                mode: "javascript",
+                lineNumbers: true,
+                readOnly: true
+            });
+            editor.save()    
+        }
     });
 
 }

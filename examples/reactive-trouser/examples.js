@@ -26,6 +26,11 @@ function runExamples(list) {
         }
     );
 
+    live(document.getElementById("ref")).innerHTML=live(()=>{
+        if (example.live==null) return "JavaScript";
+        return `JavaScrip <a style="font-size:14px" href="${example.live}.html" target="_blank">${example.live}</a>`;
+    });
+
     let code = document.getElementById("code");
     let html = document.getElementById("html");
     let preview = document.getElementById("preview");
