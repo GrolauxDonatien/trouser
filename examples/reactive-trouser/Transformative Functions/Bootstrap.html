@@ -52,11 +52,15 @@
             },
             page: {
                 title: "Main Area",
-                child: { _BSFORM_, data, hint }
+                child: "Welcome to this wonderful page!"
             }
         }
 
+        //{ _BSFORM_, data, hint }
         document.body.append(build(dom));
+        const trace=build(dom,{mode:"trace"});
+        console.log(trace);
+        document.body.append(build(build.traceToModel(trace)));
 
     </script>
 </body>

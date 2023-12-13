@@ -163,7 +163,9 @@ const build = (() => {
         } else {
             type = build.getType(what);
             let key = build.getTypeKey(type);
-            if (type == null) throw new Error("Missing type for " + build.stringify(what));
+            if (type == null) {
+                throw new Error("Missing type for " + build.stringify(what));
+            }
             dupe = {};
             for (let k in what) { // shallow copy so that we can manipulate the keys without changing the original
                 if (k !== key) dupe[k] = what[k];
@@ -233,7 +235,12 @@ const build = (() => {
                     } else if (typeof children == "function") {
                         let array = live([]);
                         live(() => array.live = children());
-                        lel.mapChildren(array, c => build.innerBuild(getState(c), context));
+                        try {
+                            lel.mapChildren(array, c => build.innerBuild(getState(c), context));
+                        } catch (e) {
+                            console.error("Building " + build.stringify({ children: array.live }));
+                            throw e;
+                        }
                     } else {
                         let alive = false;
                         for (let i = 0; i < children.length; i++) {
@@ -573,9 +580,11 @@ const build = (() => {
         }
     };
 
-    build.stringBuilder = (what, context = undefined) => {
+    build.stringBuilder = (what, type, context = undefined) => {
         if (context == undefined) context = build._context_;
-        if (context == undefined) throw new Error("Internal error: missing context for " + build.stringify(what));
+        if (context == undefined) {
+            throw new Error("Internal error: missing context for " + build.stringify(what));
+        }
         if (context.mode == "direct") return document.createTextNode(what);
         return what;
     }
@@ -637,15 +646,14 @@ const build = (() => {
                 for (let k in what) {
                     out.push(sep);
                     if (typeof what[k] == "symbol") {
-                        out.push(k);
+                        if ("_" + what[k].description.toUpperCase() + "_" == k) {
+                            out.push(k);
+                        } else {
+                            out.push(`"${k}":Symbol("${what[k].description}")`);
+                        }
                     } else if (Array.isArray(what[k])) {
                         out.push(`"${k}":`);
-                        out.push('[');
-                        for (let i = 0; i < what[k].length; i++) {
-                            if (i > 0) out.push(",");
-                            loop(what[k][i]);
-                        }
-                        out.push(']');
+                        loop(what[k]);
                     } else if (typeof what[k] == "function") {
                         out.push(`"${k}":${what[k].toString()}`);
                     } else {
@@ -655,6 +663,13 @@ const build = (() => {
                     sep = "," + separator;
                 }
                 out.push("}");
+            } else if (Array.isArray(what)) {
+                out.push('[');
+                for (let i = 0; i < what.length; i++) {
+                    if (i > 0) out.push(",");
+                    loop(what[i]);
+                }
+                out.push(']');
             } else if ((typeof what == "function") || (typeof what == "symbol")) {
                 out.push(what.toString());
             } else {
@@ -890,9 +905,11 @@ const build = (() => {
                     _TEXT_, innerText: '"' + def.replace(/"/g, '\\"') + '"'
                 }
             }
-            let ul = { _UL_, 
-                style:{"listStyleType":"none"},
-                children: [] };
+            let ul = {
+                _UL_,
+                style: { "listStyleType": "none" },
+                children: []
+            };
             for (let k in def) {
                 if (k == "0" && def[k] == "T") debugger;
                 if (typeof def[k] == "symbol") {
@@ -934,10 +951,10 @@ const build = (() => {
                         child: {
                             _BUTTON_,
                             "class": "toggleButton text",
-                            style:{
-                                border:"none",
-                                backgroundColor:"#F9F9F9",
-                                textAlign:"left"
+                            style: {
+                                border: "none",
+                                backgroundColor: "#F9F9F9",
+                                textAlign: "left"
                             },
                             listener: {
                                 click(event) {
@@ -978,9 +995,9 @@ const build = (() => {
                         _TR_,
                         children: multiple
                     }
-                }, style: { 
+                }, style: {
                     fontFamily: "monospace",
-                    border:"solid 1px black"
+                    border: "solid 1px black"
                 }
             }
             let handles = [];
@@ -1019,9 +1036,9 @@ const build = (() => {
                     _TD_,
                     handle,
                     child: renderElement(trace[trace.length - 1]),
-                    style: { 
+                    style: {
                         display: trace.length == 1 ? "table-cell" : "none",
-                        paddingLeft:multiple.length==0?"0px":"20px"
+                        paddingLeft: multiple.length == 0 ? "0px" : "20px"
                     }
                 });
             }
@@ -1032,6 +1049,7 @@ const build = (() => {
     }
 
     build.traceToModel = render;
+    build.isLive = isLive;
 
     return build;
 })();

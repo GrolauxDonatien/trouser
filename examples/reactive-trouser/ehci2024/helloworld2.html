@@ -1,0 +1,20 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+</head>
+
+<body>
+    <script src="../../live.js"></script>
+    <script src="../../trouser.js"></script>
+    <script>
+        const model = {
+            _DIV_,
+            children: ["Hello", "World", "How", "Are", "You", "Today?"].map(text => { return { _P_, innerText: text } })
+        }
+
+        document.body.append(build(model));
+    </script>
+</body>
+
+</html>
