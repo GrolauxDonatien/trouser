@@ -16,24 +16,26 @@
             header: ["Name", "Surname"],
             vheader: {
                 array: data,
-                render(_, i) { return ""+(i + 1); }
+                render(_, i) { return "" + (i + 1); }
             },
             body: data,
             footer: [{
                 _SPAN_,
                 innerHTML() {
-                    return "Rows: "+data.live.length;
+                    return "Rows: " + data.live.length;
                 }
             }, _COLSPAN_]
         }
 
-//        document.body.append(build(model));
+        //        document.body.append(build(model));
 
-        data.live.push(["Theon","Greyjoy"]);
+        data.live.push(["Theon", "Greyjoy"]);
 
-        const trace=build(model,{mode:"trace"});
+        const trace = build(model, { mode: "trace" });
         console.log(trace);
-        document.body.append(build(build.traceToModel(trace)));
+        const traceModel = build.traceToModel(trace);
+        console.log(traceModel);
+        document.body.append(build(traceModel));
 
     </script>
 </body>

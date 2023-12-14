@@ -646,10 +646,10 @@ const build = (() => {
                 for (let k in what) {
                     out.push(sep);
                     if (typeof what[k] == "symbol") {
-                        if ("_" + what[k].description.toUpperCase() + "_" == k) {
+                        if ("_" + (what[k].description || "").toUpperCase() + "_" == k) {
                             out.push(k);
                         } else {
-                            out.push(`"${k}":Symbol("${what[k].description}")`);
+                            out.push(`"${k}":Symbol(${what[k].description===undefined?'':'"'+what[k].description+'"'})`);
                         }
                     } else if (Array.isArray(what[k])) {
                         out.push(`"${k}":`);
@@ -698,19 +698,20 @@ const build = (() => {
             }
         }
     }
+
+    const _TRACE_ = Symbol();
+
     build.build = (dupe, type = null, context) => {
         if (type == null) type = build.getType(dupe);
         if (context == undefined) context = build._context_;
         if (context == undefined) throw new Error("Internal error: missing context for " + build.stringify(what));
         if (context.mode == "trace") {
-            build._context_.mode = "html";
             let d2 = build.cloneObject(dupe);
             d2[build.getTypeKey(type)] = type;
             let out = {
                 src: d2,
-                html: build.build(build.cloneObject(dupe), type)
+                _TRACE_ // mark this objet in a unique way for later identification
             }
-            build._context_.mode = "trace";
             out.tgt = build.cloneObject(build.getBuilder(dupe, type)(dupe, type, context));
             return out;
         } else {
@@ -812,7 +813,7 @@ const build = (() => {
         let str2 = build.stringify(tgt);
         function isDual(what) {
             if (typeof what == "string") return false;
-            return ("src" in what) && ("tgt" in what) && ("html" in what) && Object.keys(what).length == 3;
+            return ("src" in what) && ("tgt" in what) && (what._TRACE_ === _TRACE_) && Object.keys(what).length == 3;
         }
         if (Array.isArray(src) && src.length == 1) src = src[0];
         let last = dupe(src);

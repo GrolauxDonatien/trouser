@@ -7,7 +7,7 @@ function map(src, fn) {
         return src.map(fn);
     } else if (typeof src == 'function') {
         return map(live(src), fn);
-    } else if (build.isLive(src) || ((typeof src == "object") && ("live" in src))) {
+    } else if (build.isLive(src)) {
         if (typeof src.live == 'function') {
             return map(src.live(), fn);
         } else {
