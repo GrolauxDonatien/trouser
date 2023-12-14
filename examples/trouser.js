@@ -649,7 +649,7 @@ const build = (() => {
                         if ("_" + (what[k].description || "").toUpperCase() + "_" == k) {
                             out.push(k);
                         } else {
-                            out.push(`"${k}":Symbol(${what[k].description===undefined?'':'"'+what[k].description+'"'})`);
+                            out.push(`"${k}":Symbol(${what[k].description === undefined ? '' : '"' + what[k].description + '"'})`);
                         }
                     } else if (Array.isArray(what[k])) {
                         out.push(`"${k}":`);
@@ -809,8 +809,6 @@ const build = (() => {
     }
 
     function simplify(src, tgt) {
-        let str1 = build.stringify(src);
-        let str2 = build.stringify(tgt);
         function isDual(what) {
             if (typeof what == "string") return false;
             return ("src" in what) && ("tgt" in what) && (what._TRACE_ === _TRACE_) && Object.keys(what).length == 3;
@@ -841,12 +839,16 @@ const build = (() => {
             let ret = {};
             for (let k in what) {
                 if (k == "children") {
-                    ret[k] = [];
-                    for (let c in what[k]) {
-                        if (isDual(what[k][c])) {
-                            ret[k][c] = simplify(what[k][c].src, what[k][c].tgt);
-                        } else {
-                            ret[k][c] = [what[k][c]];
+                    if (typeof what[k] == 'function') {
+                        ret[k] = what[k];
+                    } else {
+                        ret[k] = [];
+                        for (let c in what[k]) {
+                            if (isDual(what[k][c])) {
+                                ret[k][c] = simplify(what[k][c].src, what[k][c].tgt);
+                            } else {
+                                ret[k][c] = [what[k][c]];
+                            }
                         }
                     }
                 } else {
@@ -912,13 +914,12 @@ const build = (() => {
                 children: []
             };
             for (let k in def) {
-                if (k == "0" && def[k] == "T") debugger;
                 if (typeof def[k] == "symbol") {
                     ul.children.unshift({
                         _LI_,
                         innerText: build.getTypeKey(k)
                     });
-                } else if ("children" == k) {
+                } else if ("children" == k && (typeof def[k] != "function")) {
                     let children = [];
                     ul.children.push({
                         _LI_,
